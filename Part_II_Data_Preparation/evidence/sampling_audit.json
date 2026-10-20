@@ -1,0 +1,42 @@
+{
+  "splits": {
+    "train": {
+      "original_rows": 1296675,
+      "sample_rows": 453733,
+      "original_cards": 983,
+      "sample_cards": 324,
+      "row_percent": 34.99203732623826,
+      "complete_histories": true,
+      "original_bytes": 351238196,
+      "sample_bytes": 122432070,
+      "original_sha256": "fd7139200dbfcbed0b6742bbe05a4f1abce532c4fef20918228a651647a3e75d",
+      "sample_sha256": "230543eccd9dab6124dfc668991fd474751615eb522609121c616e6fa3af3921"
+    },
+    "test": {
+      "original_rows": 555719,
+      "sample_rows": 194320,
+      "original_cards": 924,
+      "sample_cards": 324,
+      "row_percent": 34.967312616628185,
+      "complete_histories": true,
+      "original_bytes": 150354339,
+      "sample_bytes": 52368280,
+      "original_sha256": "12d553ab19440c752d2531ee1af44bb64f12cc3d3839f1649f19e81c230545f0",
+      "sample_sha256": "39d06838f4a1ae7eb8f2db49711bde1ad78d2565af54c13e031e7154c8246c09"
+    }
+  },
+  "data_mode": "existing_development_sample",
+  "shared_original_cards": 908,
+  "test_only_original_cards": 16,
+  "train_only_original_cards": 75,
+  "same_selected_cards_in_both": true,
+  "existing_sample_method": "Earlier test-row-target selection; recorded seed 42; exact saved IDs audited here.",
+  "new_reducer_method": "User-specified fraction of unique TEST cards; preview saves IDs, separate write accepts them.",
+  "final_project_plan": "Use full original train and test files, including train-only cards.",
+  "development_fraud_comparison": {
+    "original_fraud": 7506,
+    "original_rate_pct": 0.5788651743883394,
+    "sample_fraud": 2437,
+    "sample_rate_pct": 0.5371000125624541
+  }
+}

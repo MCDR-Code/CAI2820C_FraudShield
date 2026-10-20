@@ -1,0 +1,23 @@
+{
+  "evaluated_utc": "2026-10-19T13:26:51.834903+00:00",
+  "model": "Random Forest",
+  "model_sha256": "3dc619c459692de7c6e04fdf78d0f68b20b4eaa9633682d2efae1ad471610808",
+  "test_sha256": "12d553ab19440c752d2531ee1af44bb64f12cc3d3839f1649f19e81c230545f0",
+  "scoring_seconds": 3.6354966000071727,
+  "rows_per_second": 152859.17197636867,
+  "threshold": 0.5769612893644895,
+  "rows": 555719,
+  "fraud": 2145,
+  "accuracy": 0.997732667049354,
+  "precision": 0.6893453145057766,
+  "recall": 0.7510489510489511,
+  "f1": 0.7188755020080321,
+  "average_precision": 0.7798684371271347,
+  "roc_auc": 0.9892543291243374,
+  "tn": 552848,
+  "fp": 726,
+  "fn": 534,
+  "tp": 1611,
+  "review_rate": 0.0042053627822694565,
+  "targets_met": false
+}
