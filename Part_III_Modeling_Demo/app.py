@@ -10,7 +10,8 @@ import pandas as pd
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from core import MAX_BYTES, MAX_ROWS, REQUIRED, ROOT, load_bundle, score_transactions, validate_input
+from core import (MAX_BYTES, MAX_ROWS, ROOT, bundle_uses_history, load_bundle, required_columns,
+                  score_transactions, validate_input)
 
 app = FastAPI(title='FraudShield', docs_url=None, redoc_url=None)
 app.mount('/static', StaticFiles(directory=ROOT / 'static'), name='static')
@@ -29,7 +30,7 @@ def bundle():
 def analyze(df, source):
     if len(df) > MAX_ROWS:
         raise ValueError(f'Maximum batch size is {MAX_ROWS:,} transactions.')
-    validate_input(df)
+    validate_input(df, history=bundle_uses_history(bundle()))
     result = score_transactions(df, bundle())
     return {'source': source, 'rows': result.to_dict('records'),
             'total': len(result), 'flagged': int(result.review_flag.sum()),
@@ -53,7 +54,7 @@ def metadata():
                 'data': saved['data'], 'limitations': saved['limitations'],
                 'validation': pd.read_csv(artifacts / 'validation_comparison.csv').to_dict('records'),
                 'final_test': json.loads(test.read_text()) if test.exists() else None,
-                'required_columns': REQUIRED}
+                'required_columns': required_columns(bundle_uses_history(bundle()))}
     except FileNotFoundError as exc:
         return JSONResponse({'error': str(exc)}, status_code=503)
 
