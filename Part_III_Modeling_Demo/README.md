@@ -1,109 +1,137 @@
 # Part III model development and local demo
 
-This phase uses the FULL original Sparkov CSV pair. Part II's historical
-324-card preparation checkpoint remains separate and unchanged.
+Part II is an unchanged preparation checkpoint. This phase uses the full original
+Sparkov train/test pair, with no card reduction. Juan Franceschi contributed the
+history-feature and Gradient Boosting proposal in PR #1. The integration retains
+those ideas with strictly earlier timestamp groups and explicit scoring context.
 
-## Included files
+## Saved models and results
 
-- `Team_A_Model_Development_and_Demo_ran.ipynb`: the single executed modeling
-  notebook; source functions are embedded for standalone Colab execution.
-- `train.py`: chronological split, training-only transformations, two baselines,
-  Logistic Regression/Random Forest comparison and validation threshold selection.
-- `evaluate.py`: evaluate the saved model/threshold on the official test; rejects
-  an accidental repeat evaluation in the same experiment directory.
-- `core.py` and `shared/`: the shared input contract and feature transformations
-  used during both training and application inference.
-- `app.py` and `static/`: local CSV-upload review dashboard; no retraining on upload.
-- `history.py`: optional per-card history features.
-- `tests/`: focused regression tests for validation, identity/target exclusion,
-  threshold selection, history features, and valid/invalid upload handling.
-- `results/`: original recorded aggregate metrics and charts. These are evidence,
-  not runnable model artifacts or transaction datasets.
-- `Development_Results.md` and `Demo_Checklist.md`: interpretation and demo sequence.
-- `requirements-tested.txt`: exact tested packages; `requirements.txt`: compatible
-  dependency ranges for other environments.
+| Experiment | Validation precision | Validation recall | Validation F1 | Official test |
+| --- | ---: | ---: | ---: | --- |
+| Original Random Forest | 73.10% | 80.04% | 0.76412 | Previously measured: 68.93% precision, 75.10% recall |
+| Gradient Boosting | 87.72% | 81.73% | 0.84618 | Not evaluated |
+| Corrected Gradient Boosting + history | 90.85% | 85.24% | 0.87957 | Not evaluated |
 
-Model binaries and the demo transaction sample are NOT committed. They are
-generated locally during training, inside the ignored `artifacts/` directory.
-This avoids publishing original, reduced or sample transaction CSVs.
+These are validation comparisons, not new independent holdout results. The
+official test was already observed in the original project. Do not tune against
+it or present a later retrospective evaluation as unseen. The original baseline
+missed its 80% final-test recall target. Scores are not calibrated probabilities;
+review flags are not confirmed fraud. Synthetic results are not banking evidence.
 
-## Obtain data and reproduce locally
+## Obtain the original data
 
-Use Python 3.12. Download the original `fraudTrain.csv` and `fraudTest.csv` from
-[Kartik2112's dataset](https://www.kaggle.com/datasets/kartik2112/fraud-detection)
-and extract them to the ignored root `data/` directory. Generator provenance:
-[Sparkov](https://github.com/namebrandon/Sparkov_Data_Generation). No Kaggle
-API credentials are assumed. Do not use the Part II reduced pair for this phase.
+Download `fraudTrain.csv` and `fraudTest.csv` from
+[Kartik2112's dataset](https://www.kaggle.com/datasets/kartik2112/fraud-detection).
+Generator provenance: [Sparkov](https://github.com/namebrandon/Sparkov_Data_Generation).
+Extract both original CSVs into the ignored repository-root `data/` directory.
+No Kaggle API credentials are assumed. Do not combine train and test or use the
+Part II reduced pair for these experiments.
 
-From this phase folder:
+## Reproduce locally
+
+Use Python 3.12. From this phase folder, with sufficient RAM:
 
 ```powershell
 python -m pip install -r requirements-tested.txt
-python train.py --data-dir ../data --output-dir artifacts
-python evaluate.py --artifacts artifacts --data-dir ../data
+python train.py --data-dir ../data --output-dir artifacts/baseline
+python train.py --data-dir ../data --output-dir artifacts/boosting --models "Gradient Boosting"
+python train.py --data-dir ../data --output-dir artifacts/history --history --models "Gradient Boosting"
+python verify_context.py --data-dir ../data --artifacts artifacts/history
 python -m unittest discover -s tests -v
-python -m uvicorn app:app --host 127.0.0.1 --port 8765
+python -m uvicorn app:app --host 127.0.0.1 --port 8766
 ```
 
-Open http://127.0.0.1:8765. Once generated, saved artifacts are reused by the
-dashboard; no retraining or full-data upload is needed for the live demo.
-Training refuses a nonempty output directory. Evaluation refuses an existing
-`final_test.json`; use the recorded result instead of repeatedly reopening labels.
-Full-data training needs sufficient RAM and may take several minutes.
+Open http://127.0.0.1:8766. Saved models are loaded, not retrained, by the demo.
+Training refuses nonempty experiment directories. Use another NEW directory for
+a deliberate experiment, not an overwrite of recorded artifacts. The original
+baseline's published aggregate results are in `results/`; a new baseline fit
+does not automatically recreate its recorded final-test artifact.
 
-For notebooks, open this folder as the working directory or use Google Colab.
-Set `DATA_DIR` to your original CSV directory when automatic discovery cannot
-find it. The saved executed notebook can be inspected without the data. A fresh
-Colab runtime can upload both CSVs or dataset ZIPs; ZIPs are not repository files.
+The executed notebook embeds the corrected source and original aggregate
+baseline evidence for standalone Colab execution. Run All requests the original
+CSV pair or a ZIP in a fresh runtime. It trains missing new artifacts, reuses
+compatible saved ones, and verifies history/inference parity. It never calls
+`evaluate.py` or parses official test labels for evaluation.
 
-## Method and recorded results
+`evaluate.py` remains a separate deliberate tool. New GB/history candidates
+require `--acknowledge-observed-test` for a retrospective evaluation. That
+acknowledgment does not make the old test independent. No such evaluation was
+performed for this integration.
 
-Sort original development transactions by timestamp; fit on the earlier
-1,037,340 rows and select candidates/thresholds on the later 259,335 rows.
-The separate official test has 555,719 rows. No card sampling is applied.
-All learned transforms fit on training only; class weights replace resampling.
-The same saved estimator, without refitting on validation, is tested after locking
-the validation-selected threshold. Direct identifiers and the target are not inputs.
+## Demo workflow
 
-The recorded run selected Random Forest at threshold 0.5769612893644895.
-Final-test precision was **68.93%**, recall **75.10%**, with 726 false alerts and
-534 missed fraud cases. The preliminary 80% recall target was NOT met. Class-
-weighted scores are not calibrated fraud probabilities. See results/ and the
-executed notebook for supporting evidence.
+- **Batch review:** Choose the original Random Forest or transaction-only
+  Gradient Boosting. Upload a compatible CSV or load that model's sample.
+- **Customer history:** Load earlier history first, then a separate review CSV.
+  The example buttons load a matched pseudonymous history/review pair. An
+  explicit No prior history option supports a disclosed cold start. The example
+  contains a few whole card histories and is not a representative performance
+  sample.
+- **Model evaluation:** Choose a saved experiment. Validation tables, chart,
+  threshold and limitations belong to that selected model. Only the preserved
+  original baseline has the previously recorded final-test results.
 
-**The official test has already been observed.** A faithful rerun reproduces
-an existing experiment; it is not a new independent holdout. Do not tune against
-the recorded test outcomes and present a later rerun on that file as unseen.
-Synthetic historical U.S. data, repeated customers and demographic/geographic
-proxies limit generalization. Subgroup checks are descriptive, not fairness
-certification or evidence of production readiness.
+History must end strictly before the first review transaction. Overlapping files
+are rejected rather than double-counted. Within review batches, a transaction
+sees earlier review transactions on its card, never later ones or same-time
+transactions. Splitting a review stream into separate batches requires including
+earlier reviewed transactions in the next context file if their history should
+carry forward. Scoring does NOT automatically append transactions to context.
 
-## Optional: history features and gradient boosting (experimental)
+## Features and same-time behavior
 
-`python train.py --data-dir ../data --output-dir artifacts_new --history --models "Gradient Boosting"`
-adds eight per-card history features (`history.py`; each row sees only earlier
-transactions on its card) and/or a gradient-boosting candidate. Defaults are
-unchanged, so the recorded run above still reproduces. On validation only,
-Gradient Boosting + history reached precision 90.4%, recall 86.4%, F1 0.883
-(Random Forest baseline: 73.1% / 80.0% / 0.764). It has NOT been evaluated on
-the official test. A history model's dashboard uploads also need `cc_num` and
-`merchant`, and history is computed from the uploaded batch only.
+The history model adds eight features: prior count, amount/prior-mean ratio,
+amount/prior-maximum ratio, capped log time since previous timestamp, prior
+24-hour count, new merchant, new category, and distance from the previous
+timestamp's merchant location. For several merchants at the previous timestamp,
+distance uses their centroid; this deterministic convention is documented and
+tested. All features exclude current-time peers. Card IDs connect histories;
+their numerical values and fraud labels never become predictors.
 
-## Upload contract and safety
+Unseen cards are shown as No prior history. Cold-start performance is not claimed
+to match the contextual validation table. Validation uses the earlier training
+period as context and the later development period as the review batch. The
+same `history_with_context` function and saved precomputed-feature pipeline are
+used by inference. `verify_context.py` measured zero score difference on all
+259,335 validation rows after the corrections.
 
-The dashboard requires trans_date_trans_time, dob, amt, city_pop, lat, long,
-merch_lat, merch_long, category, gender and state. Extra labels/identifiers are
-ignored as predictors. It rejects missing/blank fields, invalid dates/numbers,
-nonfinite values, invalid coordinates, nonpositive amounts, negative population
-and age outside 0-120 years. Maximum batch: 50,000 rows / 20 MB.
+## Upload schema and safety
 
-The default page starts empty. Load demo sample is an explicit action using
-locally generated validation records. Failed uploads clear results and do not
-substitute sample data. Uploads are processed in memory and not saved by the
-application. Downloads omit names, addresses, DOB, card IDs and fraud labels.
-Flags support human review; they are not confirmed fraud or banking actions.
+Transaction-only inputs require `trans_date_trans_time`, `dob`, `amt`, `city_pop`,
+`lat`, `long`, `merch_lat`, `merch_long`, `category`, `gender`, `state`. History
+and history-review inputs additionally require `cc_num` and `merchant`.
+Card IDs are imported as text. Timestamp normalization has second resolution.
+Invalid dates, blank values, nonfinite numbers, bad coordinates, nonpositive
+amounts, negative population and ages outside 0-120 are rejected.
 
-Keep the server on localhost. Only load locally generated joblib files, never
-untrusted uploaded models. Authentication, production deployment and independent
-teammate usability testing are not claimed. Confirm the instructor's final
-requirements before producing the final report/presentation.
+Earlier context accepts up to 2,000,000 rows / 512 MB, enough for the original
+training CSV. Review uploads retain the 50,000-row / 20 MB interactive limit;
+the full test CSV must be divided into chronological batches for interactive
+review. Full-data validation is performed by the notebook/verification script,
+not by transmitting hundreds of thousands of rows to the browser.
+
+Context is browser-session-scoped, stored only in local server RAM, expires
+after one hour, and is explicitly clearable. At most four sessions are retained;
+the oldest is evicted when another is added. Invalid history replacement clears
+the previous context. Review errors never substitute demo results. Downloads
+omit names, addresses, birth dates, card IDs and labels and escape spreadsheet
+formula text. Uploads are not persisted by the application.
+
+No original/reduced/demo transaction files, context files, binaries, ZIPs or
+credentials are committed. Local generated files stay under ignored `artifacts/`.
+Use only locally generated trusted joblib files and bind the server to localhost.
+This is a classroom prototype, not an authenticated production banking service.
+
+## Evidence and code
+
+- `results/`: original baseline evidence, new validation-only experiment records,
+  corrected context parity report and comparison table.
+- `Team_A_Model_Development_and_Demo_ran.ipynb`: current executed notebook.
+- `train.py`, `history.py`, `core.py`, `verify_context.py`: development and shared
+  inference logic. `shared/project_data.py` retains Part II feature functions.
+- `tests/`: input/privacy checks, threshold logic, strictly earlier history,
+  same-time/order handling, context parity, cold starts and session isolation.
+- `History_Integration_Results.md`: provenance, changes and measured limitations.
+
+The Phase II report/notebook are not changed by these Phase III improvements.

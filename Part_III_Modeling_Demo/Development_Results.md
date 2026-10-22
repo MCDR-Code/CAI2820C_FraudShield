@@ -1,4 +1,9 @@
-# Team A development results
+# Original baseline development results
+
+This file preserves the original Random Forest experiment. New validation-only
+Gradient Boosting/history results and corrected context handling are documented
+in `History_Integration_Results.md` and the current executed notebook. The final-test
+numbers below do not belong to either new model.
 
 Development run: October 19, 2026.
 

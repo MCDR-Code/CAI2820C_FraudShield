@@ -12,18 +12,23 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
 from core import ROOT, load_bundle, required_columns, validate_input
-from history import HISTORY_FEATURES, history_with_context
+from history import HISTORY_FEATURES, HISTORY_VERSION, history_with_context, validate_context_period
 from train import metrics
 from shared.project_data import TARGET, sha256
 
 
-def evaluate(artifacts=ROOT / 'artifacts', data_dir=None):
+def evaluate(artifacts=ROOT / 'artifacts', data_dir=None, acknowledge_observed_test=False):
     artifacts = Path(artifacts).resolve()
     output = artifacts / 'final_test.json'
     if output.exists():
         raise ValueError('Final test has already been evaluated. Read the saved results instead of rerunning.')
     bundle = load_bundle(artifacts / 'selected_model.joblib')
     locked = bundle['metadata']
+    if (locked.get('history_features') or locked['selected_model'] == 'Gradient Boosting') and not acknowledge_observed_test:
+        raise ValueError('This project already observed the official test. New candidates are validation-only. '
+                         'A deliberate retrospective rerun requires --acknowledge-observed-test and is not an independent holdout.')
+    if locked.get('history_features') and locked.get('history_version') != HISTORY_VERSION:
+        raise ValueError('History source changed; retrain before retrospective evaluation.')
     if locked != json.loads((artifacts / 'experiment.json').read_text()):
         raise ValueError('Saved model and experiment metadata do not match.')
     path = Path(data_dir) / 'fraudTest.csv' if data_dir else Path(locked['data']['test_file'])
@@ -44,11 +49,13 @@ def evaluate(artifacts=ROOT / 'artifacts', data_dir=None):
     if history:
         # Test rows see earlier development-period transactions as context (labels are not used).
         context = validate_input(pd.read_csv(train_path, usecols=columns, dtype={'cc_num': 'string'}), history=True)
+        validate_context_period(context, inputs)
         inputs = inputs.join(history_with_context(context, validate_input(inputs, history=True)))
         pipeline.set_params(features__history='precomputed')
     scores = pipeline.predict_proba(inputs[required_columns(False) + (HISTORY_FEATURES if history else [])])[:, 1]
     seconds = time.perf_counter() - start
     result = {'evaluated_utc': datetime.now(timezone.utc).isoformat(), 'model': locked['selected_model'],
+              'retrospective_observed_test': acknowledge_observed_test,
               'model_sha256': sha256(artifacts / 'selected_model.joblib'),
               'test_sha256': locked['data']['test_sha256'],
               'scoring_seconds': seconds, 'rows_per_second': len(test) / seconds,
@@ -86,5 +93,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--artifacts', type=Path, default=ROOT / 'artifacts')
     parser.add_argument('--data-dir', type=Path, help='Override original file locations after moving the project')
+    parser.add_argument('--acknowledge-observed-test', action='store_true', help='Explicit retrospective evaluation, not an independent holdout')
     args = parser.parse_args()
-    evaluate(args.artifacts, args.data_dir)
+    evaluate(args.artifacts, args.data_dir, args.acknowledge_observed_test)

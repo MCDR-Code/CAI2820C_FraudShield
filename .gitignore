@@ -24,6 +24,7 @@ data/
 !Part_II_Data_Preparation/evidence/existing_sample_cards.csv
 !Part_III_Modeling_Demo/results/validation_comparison.csv
 !Part_III_Modeling_Demo/results/test_subgroups.csv
+!Part_III_Modeling_Demo/results/integration_validation.csv
 *.ipynb
 !*_ran.ipynb
 ~$*

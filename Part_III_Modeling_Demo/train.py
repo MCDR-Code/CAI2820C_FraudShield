@@ -26,7 +26,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 from core import CATEGORICAL, NUMERIC, REQUIRED, ROOT, FeatureBuilder, required_columns, validate_input
-from history import HISTORY_FEATURES, add_history
+from history import HISTORY_FEATURES, HISTORY_VERSION, add_history, history_with_context
 from shared.project_data import TARGET, quality_checks, sha256
 
 SEED = 42
@@ -107,12 +107,13 @@ def train(data_dir, output_dir=ROOT / 'artifacts', trees=80, history=False,
     order = np.argsort(timestamps.to_numpy(), kind='stable')
     raw = raw.iloc[order].reset_index(drop=True)
     timestamps = timestamps.iloc[order].reset_index(drop=True)
-    if history:
-        # Causal: every row sees only earlier transactions, so validation never leaks into training.
-        raw = raw.join(add_history(raw))
     boundary = int(len(raw) * .8)
     boundary = int(timestamps.searchsorted(timestamps.iloc[boundary], side='left'))
     development, validation = raw.iloc[:boundary], raw.iloc[boundary:]
+    if history:
+        development = development.join(add_history(development))
+        validation = validation.join(history_with_context(
+            development[required_columns(True)], validation[required_columns(True)]))
     if not len(development) or not len(validation) or development[TARGET].nunique() != 2 or validation[TARGET].nunique() != 2:
         raise ValueError('Both chronological splits need both classes.')
     # Inspect test inputs/chronology, not outcomes, before locking the experiment.
@@ -174,13 +175,14 @@ def train(data_dir, output_dir=ROOT / 'artifacts', trees=80, history=False,
     eligible = table[table.model.isin(models)].sort_values(['targets_met', 'f1', 'average_precision'], ascending=False, kind='stable')
     selected = eligible.iloc[0]
     pipeline, threshold = candidates[selected['model']]
-    if history:
-        pipeline.set_params(features__history='batch')  # saved model derives history from the scored batch
     locked = {'created_utc': datetime.now(timezone.utc).isoformat(), 'selected_model': selected['model'],
               'threshold': threshold, 'min_recall': MIN_RECALL, 'min_precision': MIN_PRECISION,
               'selection_rule': 'Prefer candidates meeting both targets; then maximum validation F1, then average precision.',
               'threshold_rule': 'Maximum validation F1 subject to recall >= .80 and precision >= .10, if feasible; otherwise maximum F1.',
-              'refit_on_validation': False, 'history_features': history, 'data': provenance,
+              'refit_on_validation': False, 'history_features': history,
+              'history_version': HISTORY_VERSION if history else None,
+              'history_contract': 'earlier-context-plus-review-batch' if history else 'transaction-only',
+              'data': provenance,
               'feature_count': len(pipeline['preprocess'].get_feature_names_out()),
               'environment': {'python': platform.python_version(), 'pandas': pd.__version__, 'numpy': np.__version__,
                               'scikit_learn': sklearn.__version__, 'joblib': joblib.__version__},
@@ -190,7 +192,9 @@ def train(data_dir, output_dir=ROOT / 'artifacts', trees=80, history=False,
                               'Gender, age and geography can act as proxies; subgroup evidence is descriptive, not fairness certification.',
                               'Class-weighted model scores are not calibrated fraud probabilities.',
                               'Earlier EDA exposed development patterns; validation is a development estimate.']
-                   + (['History features use only earlier transactions on the same card. Uploads are scored with the history inside the uploaded batch only, so short batches see less history than training did.'] if history else [])}
+                   + (['History scoring requires explicitly loaded earlier context or an explicit cold start. '
+                       'Validation uses training-period context plus strictly earlier validation transactions. '
+                       'Simultaneous transactions cannot influence each other. Context is not automatically updated by uploads.'] if history else [])}
     table.to_csv(output_dir / 'validation_comparison.csv', index=False)
     (output_dir / 'experiment.json').write_text(json.dumps(locked, indent=2), encoding='utf-8')
     joblib.dump({'pipeline': pipeline, 'threshold': threshold, 'metadata': locked}, output_dir / 'selected_model.joblib', compress=3)
@@ -203,6 +207,11 @@ def train(data_dir, output_dir=ROOT / 'artifacts', trees=80, history=False,
     # A deterministic validation-only sample, without labels or identity fields.
     if history:
         demo = demo_by_card(validation[required_columns(True)])
+        identities = development[required_columns(True)].copy()
+        mapping = dict(zip(validation.loc[demo.index, 'cc_num'], demo.cc_num))
+        identities = identities[identities.cc_num.isin(mapping)].copy()
+        identities['cc_num'] = identities.cc_num.map(mapping)
+        identities.to_csv(output_dir / 'demo_history.csv', index=False)
     else:
         demo = V.sample(n=min(1000, len(V)), random_state=SEED)
     demo.to_csv(output_dir / 'demo_transactions.csv', index=False)
@@ -221,4 +230,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if args.trees < 1:
         parser.error('--trees must be positive')
-    train(args.data_dir, args.output_dir, args.trees, args.history, tuple(args.models.split(',')))
+    candidates = tuple(name.strip() for name in args.models.split(','))
+    if not candidates or set(candidates) - {'Logistic Regression', 'Random Forest', 'Gradient Boosting'}:
+        parser.error('Choose valid --models names: Logistic Regression, Random Forest, Gradient Boosting.')
+    train(args.data_dir, args.output_dir, args.trees, args.history, candidates)

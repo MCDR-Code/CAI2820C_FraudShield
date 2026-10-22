@@ -5,7 +5,7 @@ import joblib
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
-from history import HISTORY_FEATURES, HISTORY_INPUTS, add_history
+from history import HISTORY_FEATURES, HISTORY_INPUTS, add_history, history_with_context, validate_context_period
 from shared.project_data import CATEGORICAL, FEATURES, NUMERIC, derive_features
 
 ROOT = Path(__file__).resolve().parent
@@ -20,7 +20,7 @@ def required_columns(history=False):
 
 
 def bundle_uses_history(bundle):
-    return bundle['pipeline']['features'].history == 'batch'
+    return bundle['pipeline']['features'].history != 'none'
 
 
 def validate_input(raw, history=False):
@@ -94,9 +94,17 @@ def load_bundle(path=None):
     return joblib.load(path)
 
 
-def score_transactions(raw, bundle):
+def score_transactions(raw, bundle, context=None):
     validated = validate_input(raw, history=bundle_uses_history(bundle))
-    scores = bundle['pipeline'].predict_proba(validated)[:, 1]
+    inputs = validated
+    history = None
+    if bundle_uses_history(bundle) and bundle['pipeline']['features'].history == 'precomputed':
+        if context is None:
+            raise ValueError('Load earlier history first, or explicitly select no prior history.')
+        validate_context_period(context, validated)
+        history = history_with_context(context, validated)
+        inputs = validated.join(history)
+    scores = bundle['pipeline'].predict_proba(inputs)[:, 1]
     result = pd.DataFrame({
         'row_number': np.arange(1, len(raw) + 1),
         'transaction_time': validated.trans_date_trans_time.to_numpy(),
@@ -105,5 +113,8 @@ def score_transactions(raw, bundle):
         'model_score': scores,
         'review_flag': scores >= bundle['threshold'],
     })
+    if history is not None:
+        result['prior_transactions'] = history.hist_prior_count.to_numpy().astype(int)
+        result['customer_status'] = np.where(history.hist_prior_count.to_numpy() > 0, 'History available', 'No prior history')
     # Do not echo customer names, addresses, DOB or card numbers in results.
     return result.sort_values('model_score', ascending=False, kind='stable')

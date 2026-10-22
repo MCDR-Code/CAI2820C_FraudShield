@@ -8,17 +8,30 @@
   <header><div class="brand">FraudShield <span>Team A / CAI2820C</span></div><span class="environment">Synthetic data · Local prototype</span></header>
   <main>
     <div class="heading"><div><p class="eyebrow">TRANSACTION OPERATIONS</p><h1>Fraud review</h1></div><span id="model-label" class="model-label">Model unavailable</span></div>
-    <nav aria-label="Views"><button id="review-tab" class="tab active" aria-selected="true">Batch review</button><button id="model-tab" class="tab" aria-selected="false">Model evaluation</button></nav>
+    <nav aria-label="Views"><button id="review-tab" class="tab active" aria-selected="true">Batch review</button><button id="history-tab" class="tab" aria-selected="false">Customer history</button><button id="model-tab" class="tab" aria-selected="false">Model evaluation</button></nav>
     <section id="review-view">
+      <label class="model-choice" for="review-model">Transaction model <select id="review-model"><option value="baseline">Random Forest baseline</option><option value="boosting">Gradient Boosting · validation only</option></select></label>
       <div class="toolbar"><label class="file-button" for="upload">Upload CSV<input id="upload" type="file" accept=".csv,text/csv"></label><button id="sample">Load demo sample</button><button id="clear">Clear</button><button id="download" disabled>Download results</button></div>
+    </section>
+    <section id="history-view" hidden>
+      <div class="evaluation-heading"><h2>Earlier history</h2><span class="experimental">Experimental · validation only</span></div>
+      <div class="toolbar"><label class="file-button" for="history-upload">Load history CSV<input id="history-upload" type="file" accept=".csv,text/csv"></label><button id="history-context-sample">Load example history</button><button id="cold-start">No prior history</button><button id="history-clear">Clear history</button></div>
+      <div id="history-status" role="status">No history loaded</div>
+      <h2>Transactions to review</h2>
+      <div class="toolbar"><label class="file-button" for="history-review-upload">Upload review CSV<input id="history-review-upload" type="file" accept=".csv,text/csv"></label><button id="history-sample">Load example transactions</button><button id="history-batch-clear">Clear batch</button><button id="history-download" disabled>Download results</button></div>
+      <details><summary>CSV schema and limits</summary><p>Both files: trans_date_trans_time, dob, amt, city_pop, lat, long, merch_lat, merch_long, category, gender, state, cc_num, merchant.</p><p>Earlier history: up to 2,000,000 rows / 512 MB. Review batch: up to 50,000 rows / 20 MB. History must end before the review batch begins. Uploaded history stays in this browser session's server memory for up to one hour; new batches do not update it automatically.</p></details>
+    </section>
+    <section id="batch-view">
       <div id="status" role="status" aria-live="polite">No batch loaded</div>
       <div id="error" role="alert" hidden></div>
       <div class="metrics"><div><span>Transactions</span><strong id="total">—</strong></div><div><span>Review flags</span><strong id="flagged">—</strong></div><div><span>Flagged amount</span><strong id="amount">—</strong></div><div><span>Score threshold</span><strong id="threshold">—</strong></div></div>
       <div class="table-heading"><h2>Review queue</h2><label><input type="checkbox" id="flagged-only"> Flagged only</label><span id="shown"></span></div>
-      <div class="table-scroll"><table><thead><tr><th>Row</th><th>Transaction time</th><th>Category</th><th class="number">Amount</th><th class="number">Model score</th><th>Review</th></tr></thead><tbody id="queue"><tr><td colspan="6" class="empty">No transactions</td></tr></tbody></table></div>
+      <div class="table-scroll"><table><thead><tr><th>Row</th><th>Transaction time</th><th>Category</th><th class="number">Amount</th><th class="number">Model score</th><th>Review</th><th id="prior-heading" hidden>Prior transactions</th></tr></thead><tbody id="queue"><tr><td colspan="6" class="empty">No transactions</td></tr></tbody></table></div>
       <p class="note">Model scores are not calibrated fraud probabilities. Review flags are not confirmed fraud.</p>
     </section>
     <section id="model-view" hidden>
+      <div id="model-error" role="alert" hidden></div>
+      <label class="model-choice" for="evaluation-model">Saved experiment <select id="evaluation-model"><option value="baseline">Random Forest baseline · original final test</option><option value="boosting">Gradient Boosting · validation only</option><option value="history">Gradient Boosting + history · validation only</option></select></label>
       <div class="evaluation-heading"><h2>Chronological validation</h2><span id="training-size"></span></div>
       <div class="table-scroll"><table><thead><tr><th>Model</th><th class="number">Precision</th><th class="number">Recall</th><th class="number">F1</th><th class="number">Average precision</th><th class="number">False alerts</th></tr></thead><tbody id="comparison"></tbody></table></div>
       <div class="chart-layout"><img src="/api/validation-pr.png" alt="Validation precision-recall curves for the two candidate models" loading="lazy"><div><h2>Reserved final test</h2><dl id="test-results"></dl><h2>Run record</h2><dl id="run-record"></dl></div></div>
