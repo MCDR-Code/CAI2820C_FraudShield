@@ -6,6 +6,13 @@ review first?** It uses synthetic Sparkov transactions distributed by Kartik2112
 
 Team: Jorge Alvarez V, Mariela Del Rio, Javier Elizalde Ramirez and Juan Franceschi.
 
+## Latest development update
+
+On `phase-iii-history-context`, the [October 27 change summary](Part_III_Modeling_Demo/README.md#latest-changes)
+lists the model/history integration, demo improvements, CSV joining tool, and
+expanded training/test split. The copied notebook is ready; full expanded-data
+training has not run. Dataset CSVs remain local and excluded from GitHub.
+
 ## Project phases
 
 | Folder | Purpose | Start here |
@@ -32,7 +39,9 @@ a local `data/` directory at this repository's root, or adjust the documented
 paths. The directory is ignored by Git and is not uploaded. Original sizes are
 1,296,675 development rows and 555,719 test rows, with 23 columns in each CSV.
 The code does not assume Kaggle API credentials or require `kaggle.json`.
-Use the published CSVs, not a newly generated simulator run.
+Use the published CSVs for historical Part II and the original-model checkpoint.
+The separate expanded-data experiment also uses newly generated transactions;
+follow [Expanded Training](Part_III_Modeling_Demo/Expanded_Training.md) for that run.
 
 No original or reduced transaction CSVs, ZIPs, saved model binaries, caches,
 credentials, archive copies or duplicate notebook versions are committed.

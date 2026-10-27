@@ -1,6 +1,46 @@
 # Part III model development and local demo
 
-Part II is an unchanged preparation checkpoint. This phase uses the full original
+## Latest changes
+
+**October 27, 2026 — `phase-iii-history-context`**
+
+- **Model/history integration:** PR #2 adds Juan's nine additional history
+  features, giving 17 history features and 95 total on the original full dataset.
+  All history uses strictly earlier timestamps; simultaneous purchases cannot
+  influence each other. Error-analysis and model-sharing checks are included.
+- **History uploads:** add CSVs sequentially or select several together; counts
+  update after each addition. Duplicate transaction IDs count once, conflicting
+  records are rejected, and failed additions preserve existing history.
+- **Large files:** fixed review/history row and byte caps are removed. Available
+  memory and processing time still govern practical sizes.
+- **Upload evaluation:** optional `is_fraud` labels produce precision, recall,
+  F1, accuracy, correct/false alerts, missed fraud and correctly cleared counts.
+  The queue/download shows actual labels and outcomes. Labels never determine
+  predictions; these metrics describe this upload, not the old validation run.
+- **Tab/model switching:** each batch's results, metrics and filters are retained
+  when switching views or transaction models, for the lifetime of the page.
+- **Data and joining:** [join_csvs.py](join_csvs.py) joins selected CSVs with one
+  header, preserves card IDs as text and handles the original export-index
+  column. Full 2021 data is complete for the same 999 generated customers.
+  [prepare_expanded_training.py](prepare_expanded_training.py) prepares the
+  project's combined data under `data/expanded_training_2021_2026`.
+- **Training/test split:** `fraudTrain.csv` contains **6,325,651** rows: original
+  January 2019–June 2020 training data plus generated 2021–2025. `fraudTest.csv`
+  contains **960,579** generated 2026 rows and is excluded from fitting/validation.
+- **Separate notebook:** [expanded training notebook](Team_A_Expanded_Data_Model_Training.ipynb)
+  offers Logistic Regression, Random Forest and Gradient Boosting, plus the v3
+  history experiment. It saves new artifacts separately. **Full expanded training
+  and v3 retraining have not run**; the demo still uses previously saved models
+  where available. The original Random Forest and submitted work are preserved.
+
+Only code, notebook, instructions and aggregate evidence are shared. Dataset CSVs
+remain local. See [Expanded Training](Expanded_Training.md) for exact commands and
+file locations, and [Training and Model Sharing](Training_and_Model_Sharing.md)
+for saved-model transfer. `main` and the Phase II submission remain unchanged.
+
+## Experiment context
+
+Part II is an unchanged preparation checkpoint. The original experiment uses the full original
 Sparkov train/test pair, with no card reduction. Juan Franceschi contributed the
 history-feature and Gradient Boosting proposal in PR #1. The integration retains
 those ideas with strictly earlier timestamp groups and explicit scoring context.
