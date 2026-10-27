@@ -115,7 +115,8 @@ from the earlier one-month run. Equal profile coverage also differs from
 population weighting. These files are additional synthetic scenarios, not an
 exact reproduction of the Kaggle author's unrecorded settings.
 
-The demo accepts one CSV per input. A follow-up removed fixed file-size and row
+The demo accepts one review CSV and supports sequential or multi-file history
+additions, with updated counts and duplicate-ID checks. A follow-up removed fixed file-size and row
 caps, so full-year files can be loaded, subject to available memory and processing
 time. This generation does not add multi-file uploads, retrain v3 or change the
 training program's original-dataset requirements.

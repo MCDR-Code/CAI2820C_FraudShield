@@ -95,14 +95,14 @@ def demo_by_card(frame, limit=1000):
 
 
 def train(data_dir, output_dir=ROOT / 'artifacts', trees=80, history=False,
-          candidates_to_fit=('Logistic Regression', 'Random Forest'), gb_params=None):
+          candidates_to_fit=('Logistic Regression', 'Random Forest'), gb_params=None, expanded_data=False):
     data_dir, output_dir = Path(data_dir).resolve(), Path(output_dir).resolve()
     if output_dir.exists() and any(output_dir.iterdir()):
         raise ValueError('Output directory is not empty. Preserve this run and choose a NEW --output-dir.')
     output_dir.mkdir(parents=True, exist_ok=True)
     print('Loading full development data; test labels remain unread.', flush=True)
     raw = pd.read_csv(data_dir / 'fraudTrain.csv', dtype={'cc_num': 'string'})
-    if len(raw) != 1296675:
+    if not expanded_data and len(raw) != 1296675:
         raise ValueError('This phase requires the full original fraudTrain.csv (1,296,675 rows), not a reduced subset.')
     quality, _ = quality_checks(raw)
     blockers = ['missing_cells', 'duplicate_rows', 'duplicate_transaction_ids', 'invalid_labels',
@@ -126,23 +126,28 @@ def train(data_dir, output_dir=ROOT / 'artifacts', trees=80, history=False,
     if not len(development) or not len(validation) or development[TARGET].nunique() != 2 or validation[TARGET].nunique() != 2:
         raise ValueError('Both chronological splits need both classes.')
     # Inspect test inputs/chronology, not outcomes, before locking the experiment.
-    test_inputs = pd.read_csv(data_dir / 'fraudTest.csv', usecols=required_columns(history) + ['trans_num', 'cc_num'], dtype={'cc_num': 'string'})
-    if len(test_inputs) != 555719:
+    test_path = data_dir / 'fraudTest.csv'
+    test_inputs = (pd.read_csv(test_path, usecols=list(dict.fromkeys(required_columns(history) + ['trans_num', 'cc_num'])), dtype={'cc_num': 'string'})
+                   if test_path.exists() else None)
+    if not expanded_data and (test_inputs is None or len(test_inputs) != 555719):
         raise ValueError('This phase requires the full original fraudTest.csv (555,719 rows), not a reduced subset.')
-    validate_input(test_inputs, history=history)
-    test_time = pd.to_datetime(test_inputs.trans_date_trans_time)
-    if timestamps.max() >= test_time.min() or test_inputs.trans_num.duplicated().any() or set(raw.trans_num) & set(test_inputs.trans_num):
-        raise ValueError('Test chronology or transaction ID isolation failed.')
+    test_time = None
+    if test_inputs is not None:
+        validate_input(test_inputs, history=history)
+        test_time = pd.to_datetime(test_inputs.trans_date_trans_time)
+        if timestamps.max() >= test_time.min() or test_inputs.trans_num.duplicated().any() or set(raw.trans_num) & set(test_inputs.trans_num):
+            raise ValueError('Test chronology or transaction ID isolation failed.')
     provenance = {
-        'train_file': str(data_dir / 'fraudTrain.csv'), 'test_file': str(data_dir / 'fraudTest.csv'),
-        'train_sha256': sha256(data_dir / 'fraudTrain.csv'), 'test_sha256': sha256(data_dir / 'fraudTest.csv'),
-        'training_rows': len(development), 'validation_rows': len(validation), 'test_rows': len(test_inputs),
+        'dataset_mode': 'expanded' if expanded_data else 'original',
+        'train_file': str(data_dir / 'fraudTrain.csv'), 'test_file': str(test_path) if test_inputs is not None else None,
+        'train_sha256': sha256(data_dir / 'fraudTrain.csv'), 'test_sha256': sha256(test_path) if test_inputs is not None else None,
+        'training_rows': len(development), 'validation_rows': len(validation), 'test_rows': len(test_inputs) if test_inputs is not None else None,
         'training_fraud': int(development[TARGET].sum()), 'validation_fraud': int(validation[TARGET].sum()),
-        'training_cards': int(development.cc_num.nunique()), 'test_cards': int(test_inputs.cc_num.nunique()),
-        'test_cards_unseen_in_training': len(set(test_inputs.cc_num) - set(development.cc_num)),
+        'training_cards': int(development.cc_num.nunique()), 'test_cards': int(test_inputs.cc_num.nunique()) if test_inputs is not None else None,
+        'test_cards_unseen_in_training': len(set(test_inputs.cc_num) - set(development.cc_num)) if test_inputs is not None else None,
         'training_start': str(timestamps.iloc[0]), 'training_end': str(timestamps.iloc[boundary-1]),
         'validation_start': str(timestamps.iloc[boundary]), 'validation_end': str(timestamps.iloc[-1]),
-        'test_start': str(test_time.min()), 'test_end': str(test_time.max()),
+        'test_start': str(test_time.min()) if test_time is not None else None, 'test_end': str(test_time.max()) if test_time is not None else None,
         'seed': SEED, 'test_labels_loaded': False, 'quality': quality,
     }
     del test_inputs
@@ -237,6 +242,7 @@ if __name__ == '__main__':
     parser.add_argument('--models', default='Logistic Regression,Random Forest',
                         help='comma-separated candidates from: Logistic Regression, Random Forest, Gradient Boosting')
     parser.add_argument('--history', action='store_true', help='add per-card history features')
+    parser.add_argument('--expanded-data', action='store_true', help='Explicit new experiment: allow new dataset sizes and a pending future test file.')
     parser.add_argument('--gb-params', help='Gradient Boosting settings: JSON text, a JSON file, or tune.py output')
     args = parser.parse_args()
     if args.trees < 1:
@@ -245,4 +251,4 @@ if __name__ == '__main__':
     if not candidates or set(candidates) - {'Logistic Regression', 'Random Forest', 'Gradient Boosting'}:
         parser.error('Choose valid --models names: Logistic Regression, Random Forest, Gradient Boosting.')
     train(args.data_dir, args.output_dir, args.trees, args.history, candidates,
-          load_gb_params(args.gb_params) if args.gb_params else None)
+          load_gb_params(args.gb_params) if args.gb_params else None, expanded_data=args.expanded_data)

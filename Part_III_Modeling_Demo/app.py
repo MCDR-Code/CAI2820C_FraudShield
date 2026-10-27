@@ -84,12 +84,13 @@ def context_summary(context):
         return {'loaded': False}
     frame = context['frame']
     return {'loaded': True, 'source': context['source'], 'rows': len(frame),
+            'files': context.get('files', []), 'duplicates_removed': context.get('duplicates_removed', 0),
             'cards': int(frame.cc_num.nunique()), 'cold_start': frame.empty,
             'start': None if frame.empty else str(frame.trans_date_trans_time.min()),
             'end': None if frame.empty else str(frame.trans_date_trans_time.max())}
 
 
-def save_context(request, response, frame, source):
+def save_context(request, response, frame, source, files=None, duplicates_removed=0):
     # Replace this browser's context; never persist uploads or share another session's history.
     old = request.cookies.get('fraudshield_history')
     token = secrets.token_urlsafe(24)
@@ -99,7 +100,8 @@ def save_context(request, response, frame, source):
         if len(_contexts) >= 4:
             oldest = min(_contexts, key=lambda key: _contexts[key]['time'])
             del _contexts[oldest]
-        context = {'frame': frame, 'source': source, 'time': time.monotonic()}
+        context = {'frame': frame, 'source': source, 'time': time.monotonic(),
+                   'files': files or [], 'duplicates_removed': duplicates_removed}
         _contexts[token] = context
     response.set_cookie('fraudshield_history', token, httponly=True, samesite='strict', max_age=CONTEXT_TTL)
     return context_summary(context)
@@ -174,18 +176,50 @@ def context_status(request: Request):
     return context_summary(session_context(request))
 
 
+def combine_history(files, previous=None):
+    """Combine a selected set; transaction IDs prevent double-counted history."""
+    parts, names = [], []
+    columns = required_columns(True)
+    if previous is not None and not previous['frame'].empty:
+        parts.append(previous['frame'])
+        names.extend(previous.get('files') or [previous['source']])
+    for upload_file in files:
+        frame, name = read_upload(upload_file, history=True)
+        validated = validate_input(frame, history=True)
+        keep = columns + (['trans_num'] if 'trans_num' in validated else [])
+        parts.append(validated[keep])
+        names.append(name)
+    combined = pd.concat(parts, ignore_index=True)
+    if 'trans_num' in combined and combined.trans_num.notna().all() and combined.trans_num.astype(str).str.strip().ne('').all():
+        # Identical IDs with changed model inputs are conflicts, not duplicates.
+        unique = combined.drop_duplicates(subset=['trans_num'] + columns)
+        if unique.trans_num.duplicated().any():
+            raise ValueError('History files contain conflicting transactions with the same trans_num.')
+        combined = unique
+    elif len(parts) > 1 and combined.duplicated(subset=columns).any():
+        raise ValueError('History files contain identical rows without complete transaction IDs. Include trans_num to distinguish duplicates from separate purchases.')
+    removed = sum(len(part) for part in parts) - len(combined)
+    combined = combined.sort_values('trans_date_trans_time', kind='stable').reset_index(drop=True)
+    keep = columns + (['trans_num'] if 'trans_num' in combined else [])
+    return combined[keep], ', '.join(names), names, removed
+
+
 @app.post('/api/history/context')
-def upload_context(request: Request, response: Response, file: UploadFile = File(...)):
+def upload_context(request: Request, response: Response, file: list[UploadFile] = File(...), append: bool = False):
     # Clear prior context on a failed replacement rather than silently keep using it.
+    previous_context = session_context(request) if append else None
     previous = request.cookies.get('fraudshield_history')
-    with _lock:
-        _contexts.pop(previous, None)
+    if not append:
+        with _lock:
+            _contexts.pop(previous, None)
     try:
-        frame, filename = read_upload(file, history=True)
-        frame = validate_input(frame, history=True)[required_columns(True)]
-        return save_context(request, response, frame, filename)
+        frame, filename, names, removed = combine_history(file, previous_context)
+        return save_context(request, response, frame, filename, files=list(dict.fromkeys(names)), duplicates_removed=removed)
     except ERRORS as exc:
         return JSONResponse({'error': str(exc)}, status_code=400)
+    finally:
+        for upload_file in file:
+            upload_file.file.close()
 
 
 @app.delete('/api/history/context')

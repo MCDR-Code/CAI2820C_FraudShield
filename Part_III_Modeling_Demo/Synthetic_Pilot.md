@@ -61,7 +61,7 @@ All generated data stays locally in:
 Only code and this explanation belong in GitHub; generated customer/transaction
 files and model binaries stay outside it. The pilot is well below existing demo
 former upload limits. A later update removed fixed upload caps; inputs still
-accept one CSV at a time.
+accept one review CSV, while history accepts sequential or multi-file additions.
 
 ## Reproduce or try a longer period
 

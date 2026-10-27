@@ -25,7 +25,7 @@ function render() {
   $('shown').textContent=filtered.length ? `${count(Math.min(100,filtered.length))} of ${count(filtered.length)}` : '';
 }
 function showContext(data) {
-  $('history-status').textContent = !data.loaded ? 'No history loaded' : data.cold_start ? 'No prior history selected · cold start' : `${data.source} · ${count(data.rows)} transactions · ${count(data.cards)} cards · through ${data.end} UTC`;
+  $('history-status').textContent = !data.loaded ? 'No history loaded' : data.cold_start ? 'No prior history selected · cold start' : `${data.source} · ${count(data.rows)} transactions · ${count(data.cards)} cards · through ${data.end} UTC`+(data.duplicates_removed?` · ${count(data.duplicates_removed)} duplicate transactions removed`:'');
 }
 async function operation(url,form,context=false,method='POST') {
   if(busy)return;
@@ -52,9 +52,9 @@ async function operation(url,form,context=false,method='POST') {
     document.querySelectorAll('input[type=file]').forEach(c=>c.value='');
   }
 }
-function upload(id,url,context=false){$(id).onchange=()=>{if($(id).files.length){const form=new FormData();form.append('file',$(id).files[0]);operation(typeof url==='function'?url():url,form,context);}};}
+function upload(id,url,context=false){$(id).onchange=()=>{if($(id).files.length){const form=new FormData();for(const file of $(id).files)form.append('file',file);operation(typeof url==='function'?url():url,form,context);}};}
 upload('upload',()=>`/api/analyze?model=${$('review-model').value}`);
-upload('history-upload','/api/history/context',true);
+upload('history-upload','/api/history/context?append=true',true);
 upload('history-review-upload','/api/analyze?model=history');
 $('sample').onclick=()=>operation(`/api/sample?model=${$('review-model').value}`);
 $('history-context-sample').onclick=()=>operation('/api/history/sample-context',null,true);

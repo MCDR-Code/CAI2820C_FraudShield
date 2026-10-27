@@ -20,6 +20,9 @@ the original data and trained models are unchanged.
 five-year generation for 999 new customers, matching the original dataset's
 actual distinct-card count, with one compatible labeled CSV per year.
 
+[Expanded Training](Expanded_Training.md) describes the separate combined
+training file and copied unexecuted notebook, with all three training algorithms.
+
 ## Saved models and results
 
 | Experiment | Validation precision | Validation recall | Validation F1 | Official test |
@@ -128,12 +131,15 @@ History and review uploads have no fixed byte or transaction-count limit.
 CSV parsing reads directly from the spooled upload, avoiding full-file byte and
 decoded-text copies. Available memory and processing time still determine the
 practical file size. The browser shows the first 100 matching results; the full
-scored result is available in the download. Each input still accepts one CSV.
+scored result is available in the download. History supports sequential additions
+or selecting several CSVs together. Updated counts follow each upload. Repeated
+transaction IDs count once; conflicts are rejected. Failed additions preserve
+existing history; Clear history starts over. Review accepts one CSV at a time.
 
 Context is browser-session-scoped, stored only in local server RAM, expires
 after one hour, and is explicitly clearable. At most four sessions are retained;
-the oldest is evicted when another is added. Invalid history replacement clears
-the previous context. Review errors never substitute demo results. Downloads
+the oldest is evicted when another is added. Invalid legacy replacement clears
+the previous context; invalid browser additions preserve it. Review errors never substitute demo results. Downloads
 omit names, addresses, birth dates, card IDs and labels and escape spreadsheet
 formula text. Uploads are not persisted by the application.
 

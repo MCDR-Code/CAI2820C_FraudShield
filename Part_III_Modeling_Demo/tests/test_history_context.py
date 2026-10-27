@@ -108,6 +108,52 @@ class ContextTests(unittest.TestCase):
             two.delete('/api/history/context')
             self.assertFalse(two.get('/api/history/context').json()['loaded'])
 
+    def test_multiple_history_files_deduplicate_ids_and_keep_distinct_purchases(self):
+        history = self.context.copy()
+        history['trans_num'] = [f'id-{i}' for i in range(len(history))]
+        with patch.dict(web._contexts, {}, clear=True):
+            client = TestClient(web.app)
+            result = client.post('/api/history/context', files=[
+                ('file', ('first.csv', history.iloc[:70].to_csv(index=False))),
+                ('file', ('second.csv', history.iloc[50:].to_csv(index=False)))])
+            self.assertEqual(result.status_code, 200, result.text)
+            self.assertEqual(result.json()['rows'], 100)
+            self.assertEqual(result.json()['duplicates_removed'], 20)
+            self.assertEqual(len(result.json()['files']), 2)
+            conflict = history.iloc[:1].assign(amt=9999)
+            bad = client.post('/api/history/context', files=[
+                ('file', ('first.csv', history.to_csv(index=False))),
+                ('file', ('conflict.csv', conflict.to_csv(index=False)))])
+            self.assertEqual(bad.status_code, 400)
+            self.assertFalse(client.get('/api/history/context').json()['loaded'])
+            same = history.iloc[:1].copy()
+            separate = same.assign(trans_num='another-transaction')
+            result = client.post('/api/history/context', files=[
+                ('file', ('one.csv', same.to_csv(index=False))),
+                ('file', ('two.csv', separate.to_csv(index=False)))])
+            self.assertEqual(result.json()['rows'], 2)
+
+    def test_sequential_history_uploads_append_and_invalid_addition_keeps_history(self):
+        history = self.context.copy()
+        history['trans_num'] = [f'id-{i}' for i in range(len(history))]
+        with patch.dict(web._contexts, {}, clear=True):
+            client = TestClient(web.app)
+            first = client.post('/api/history/context?append=true', files={
+                'file': ('first.csv', history.iloc[:70].to_csv(index=False))})
+            self.assertEqual(first.json()['rows'], 70)
+            second = client.post('/api/history/context?append=true', files={
+                'file': ('second.csv', history.iloc[50:].to_csv(index=False))})
+            self.assertEqual(second.status_code, 200, second.text)
+            self.assertEqual(second.json()['rows'], 100)
+            self.assertEqual(second.json()['duplicates_removed'], 20)
+            self.assertEqual(len(second.json()['files']), 2)
+            bad = client.post('/api/history/context?append=true', files={
+                'file': ('bad.csv', 'amt\nwrong\n')})
+            self.assertEqual(bad.status_code, 400)
+            self.assertEqual(client.get('/api/history/context').json()['rows'], 100)
+            client.delete('/api/history/context')
+            self.assertFalse(client.get('/api/history/context').json()['loaded'])
+
     def test_expired_context_is_not_reused(self):
         with patch.dict(web._contexts, {}, clear=True):
             client = TestClient(web.app)

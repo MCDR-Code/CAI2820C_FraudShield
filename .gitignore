@@ -27,4 +27,5 @@ data/
 !Part_III_Modeling_Demo/results/integration_validation.csv
 *.ipynb
 !*_ran.ipynb
+!Part_III_Modeling_Demo/Team_A_Expanded_Data_Model_Training.ipynb
 ~$*

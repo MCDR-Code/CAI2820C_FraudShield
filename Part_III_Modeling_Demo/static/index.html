@@ -15,11 +15,11 @@
     </section>
     <section id="history-view" hidden>
       <div class="evaluation-heading"><h2>Earlier history</h2><span class="experimental">Experimental · validation only</span></div>
-      <div class="toolbar"><label class="file-button" for="history-upload">Load history CSV<input id="history-upload" type="file" accept=".csv,text/csv"></label><button id="history-context-sample">Load example history</button><button id="cold-start">No prior history</button><button id="history-clear">Clear history</button></div>
+      <div class="toolbar"><label class="file-button" for="history-upload">Add history CSVs<input id="history-upload" type="file" accept=".csv,text/csv" multiple></label><button id="history-context-sample">Load example history</button><button id="cold-start">No prior history</button><button id="history-clear">Clear history</button></div>
       <div id="history-status" role="status">No history loaded</div>
       <h2>Transactions to review</h2>
       <div class="toolbar"><label class="file-button" for="history-review-upload">Upload review CSV<input id="history-review-upload" type="file" accept=".csv,text/csv"></label><button id="history-sample">Load example transactions</button><button id="history-batch-clear">Clear batch</button><button id="history-download" disabled>Download results</button></div>
-      <details><summary>CSV format and history</summary><p>Both files: trans_date_trans_time, dob, amt, city_pop, lat, long, merch_lat, merch_long, category, gender, state, cc_num, merchant.</p><p>No fixed file-size or transaction-count limit. Large files take longer and use more memory. History must end before the review batch begins. Uploaded history stays in this browser session's server memory for up to one hour; new batches do not update it automatically.</p></details>
+      <details><summary>CSV format and history</summary><p>History and review CSVs: trans_date_trans_time, dob, amt, city_pop, lat, long, merch_lat, merch_long, category, gender, state, cc_num, merchant.</p><p>Add history files one at a time or select several together. Each successful upload adds to the loaded history and updates the counts. Clear history to start over. Repeated transaction IDs are counted once; conflicting records are rejected and existing history is preserved. History must end before the review batch begins.</p><p>No fixed file-size or transaction-count limit. Large files take longer and use more memory. Uploaded history stays in this browser session's server memory for up to one hour; review batches do not update it automatically.</p></details>
     </section>
     <section id="batch-view">
       <div id="status" role="status" aria-live="polite">No batch loaded</div>
