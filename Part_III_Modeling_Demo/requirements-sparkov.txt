@@ -1,0 +1,6 @@
+# Isolated GENERATION environment, Python 3.12. Do not install over model packages.
+Faker==13.12.0
+numpy==1.26.4
+python-dateutil==3.0.0
+six==1.17.0
+tzdata==2026.5

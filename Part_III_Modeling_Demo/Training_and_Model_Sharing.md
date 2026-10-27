@@ -104,7 +104,8 @@ first. Tell him the exact code commit used for training when sharing the folder.
 Record the new metrics, model hash and parity check, then refresh the executed
 notebook and results summary. Do not substitute the older 96.56%/96.68% figures.
 PR #1 can be closed as superseded by Juan. Merge into `main` only after the new
-run and team checks. Fixed upload-limit removal and generating extra Sparkov data
-remain separate pending work; they are not included in this PR #2 integration.
+run and team checks. Upload-limit removal remains pending. A separate one-month
+generation experiment is now documented in [Synthetic Pilot](Synthetic_Pilot.md);
+it does not retrain this model.
 
 Reference: https://scikit-learn.org/stable/model_persistence.html

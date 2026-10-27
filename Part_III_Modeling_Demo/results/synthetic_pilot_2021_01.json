@@ -1,0 +1,217 @@
+{
+  "rows": 4597,
+  "cards": 60,
+  "profiles": 12,
+  "first_transaction": "2021-01-01 00:01:42",
+  "last_transaction": "2021-01-31 23:56:32",
+  "fraud": 610,
+  "fraud_percent": 13.26952360234936,
+  "history_rows": 3493,
+  "review_rows": 1104,
+  "review_starts": "2021-01-24 00:00:00",
+  "original_card_overlap": 0,
+  "quality_checks": {
+    "rows": 4597,
+    "columns": 22,
+    "missing_cells": 0,
+    "duplicate_rows": 0,
+    "duplicate_transaction_ids": 0,
+    "invalid_labels": 0,
+    "invalid_timestamps": 0,
+    "invalid_birth_dates": 0,
+    "invalid_numeric_cells": 0,
+    "nonpositive_amounts": 0,
+    "negative_city_population": 0,
+    "birth_after_transaction": 0,
+    "invalid_coordinates": 0,
+    "amount_iqr_upper_fence": 251.40999999999997,
+    "amount_upper_outliers": 567,
+    "amount_min": 1.0,
+    "amount_max": 7018.76
+  },
+  "profile_counts": {
+    "adults_2550_female_rural.json": {
+      "customers": 5,
+      "rows": 369,
+      "fraud": 54
+    },
+    "adults_2550_female_urban.json": {
+      "customers": 5,
+      "rows": 565,
+      "fraud": 56
+    },
+    "adults_2550_male_rural.json": {
+      "customers": 5,
+      "rows": 362,
+      "fraud": 47
+    },
+    "adults_2550_male_urban.json": {
+      "customers": 5,
+      "rows": 327,
+      "fraud": 47
+    },
+    "adults_50up_female_rural.json": {
+      "customers": 5,
+      "rows": 333,
+      "fraud": 45
+    },
+    "adults_50up_female_urban.json": {
+      "customers": 5,
+      "rows": 186,
+      "fraud": 44
+    },
+    "adults_50up_male_rural.json": {
+      "customers": 5,
+      "rows": 435,
+      "fraud": 49
+    },
+    "adults_50up_male_urban.json": {
+      "customers": 5,
+      "rows": 307,
+      "fraud": 54
+    },
+    "young_adults_female_rural.json": {
+      "customers": 5,
+      "rows": 562,
+      "fraud": 52
+    },
+    "young_adults_female_urban.json": {
+      "customers": 5,
+      "rows": 478,
+      "fraud": 58
+    },
+    "young_adults_male_rural.json": {
+      "customers": 5,
+      "rows": 330,
+      "fraud": 48
+    },
+    "young_adults_male_urban.json": {
+      "customers": 5,
+      "rows": 343,
+      "fraud": 56
+    }
+  },
+  "evaluations": [
+    {
+      "model": "baseline",
+      "saved_model": "Random Forest",
+      "model_sha256": "3dc619c459692de7c6e04fdf78d0f68b20b4eaa9633682d2efae1ad471610808",
+      "threshold": 0.5769612893644895,
+      "review_rows": 1104,
+      "true_positives": 11,
+      "false_positives": 1,
+      "false_negatives": 14,
+      "true_negatives": 1078,
+      "precision": 0.9166666666666666,
+      "recall": 0.44,
+      "f1": 0.5945945945945946
+    },
+    {
+      "model": "boosting",
+      "saved_model": "Gradient Boosting",
+      "model_sha256": "633dbdbe59209f1089d47a8273e411e6a160aeacb3157f1f1135f6117a9b0b3f",
+      "threshold": 0.9489034848627804,
+      "review_rows": 1104,
+      "true_positives": 9,
+      "false_positives": 4,
+      "false_negatives": 16,
+      "true_negatives": 1075,
+      "precision": 0.6923076923076923,
+      "recall": 0.36,
+      "f1": 0.47368421052631576
+    }
+  ],
+  "not_evaluated": [
+    "history_v3: trained artifact not available"
+  ],
+  "output_sha256": {
+    "customers.psv": "bec34645d8e7516aa0ff75c5ffdda738fb3eaeea2b8c7c3408ca5ad19d0c5c47",
+    "raw/adults_2550_female_rural.psv": "ab2f53fb6efcd84ca21c1b003dd4b1e7fa9832b1e89c838656775b3e06bf0974",
+    "raw/adults_2550_female_urban.psv": "01136e57ebe6b1bd47854c1e08cfcaabe54cffef4b9a9213953b999083094331",
+    "raw/adults_2550_male_rural.psv": "a98df64d9c87c54e061d938435ff64285203c9bab23a101af76adfd5bf41b597",
+    "raw/adults_2550_male_urban.psv": "74f9034f720501f0251bf6187712ed81a8ebccebf6780780b1df9d6e08463190",
+    "raw/adults_50up_female_rural.psv": "5a2380b693d888b4bfe03906297d3eb99b5da72aa178454c893badf8ac94a28a",
+    "raw/adults_50up_female_urban.psv": "e97a8599d7ae5fce7005f581049e43915bc0c98da853d439cf4639a4f423d94a",
+    "raw/adults_50up_male_rural.psv": "60b893904350640a38b95bdf229743806c5ae336434bccbd0250a30450c91cfa",
+    "raw/adults_50up_male_urban.psv": "2c187dd04dc1548b41463e853afabcd8429ccf1e498ee87ca295facc633ee7f3",
+    "raw/young_adults_female_rural.psv": "c66d8119a046405427d49c12ea6bd9a390cdd3bf5e91c3bdff31f589076fd8d2",
+    "raw/young_adults_female_urban.psv": "3e250b0df284168feb6feaec5fde7bc68350e227f6acdf81e3c07aa46ad494f0",
+    "raw/young_adults_male_rural.psv": "732d4fb084d3ed9c49773af7f5afceb2b0512e1e06a3556aa276c4fd3b742d81",
+    "raw/young_adults_male_urban.psv": "439674c5c464368ad08b2128f88ed7bfa4fc92aadb7d8a5e13e9fa82bfc21ffe",
+    "baseline_review_results.csv": "736f15a2e6362365c9f51395c6e751a4bafd73a3ca5d422c137fa611d53193a2",
+    "boosting_review_results.csv": "73580f20081244a550600312ddc60fc00c252a453eadaaa3a523147a2a82716f",
+    "pilot_history.csv": "79b75646789151c265feba5b037534f2d7a73f83cbef5d7f1a36ccc357d4e7ea",
+    "pilot_review.csv": "f92684af768e6c3cbfbc3fd38d5ce6c27e109e8753c425211a7b4320ebfc63a9",
+    "pilot_transactions.csv": "7de7f11893b1e1fd56415a88e2d53b6017ed10c90b2af6cc90ef23ea892df90f"
+  },
+  "generation": {
+    "upstream_url": "https://github.com/namebrandon/Sparkov_Data_Generation",
+    "upstream_commit": "b5eb45c89d36f2aa4ef16044a42945bed8b96d93",
+    "seed": 42,
+    "start": "2021-01-01",
+    "end": "2021-01-31",
+    "customers_per_profile": 5,
+    "customer_count": 60,
+    "profiles": [
+      "adults_2550_female_rural.json",
+      "adults_2550_female_urban.json",
+      "adults_2550_male_rural.json",
+      "adults_2550_male_urban.json",
+      "adults_50up_female_rural.json",
+      "adults_50up_female_urban.json",
+      "adults_50up_male_rural.json",
+      "adults_50up_male_urban.json",
+      "young_adults_female_rural.json",
+      "young_adults_female_urban.json",
+      "young_adults_male_rural.json",
+      "young_adults_male_urban.json"
+    ],
+    "environment": {
+      "python": "3.12.0",
+      "faker": "13.12.0",
+      "numpy": "1.26.4"
+    },
+    "wrapper_sha256": "10cabcec98c8a0bc74d30e5c810efa4bd8f70f13ba6aa6a771549eae279cdb57",
+    "upstream_sha256": {
+      "datagen_customer.py": "6f2f98d6a26f14ee4eb90d062d77e6ac06a172cf338b5db9893b8dd88a8b0a58",
+      "datagen_transaction.py": "bd181b3bd513b8ef452c0da74761eccee012d06a6d379def6ebf700f8fcbeb94",
+      "profile_weights.py": "0c8f28d4625c7b046dfe4200df458676378140299917b317fa40562986b20270",
+      "main_config.py": "3d024fb2601c02d85c03d1bf3903c82231a5b5f6662ad438da6b3a94007089df",
+      "data/merchants.csv": "c3fcc3bead7901e0ed049f6548a30afec23e0e00bf3c3c4d2af59c63d34d9809",
+      "profiles/adults_2550_female_rural.json": "e596e7466f4fb154941b8745c63452b59ab37291f8a0db2ae26dc54b63c4cdb1",
+      "profiles/adults_2550_female_urban.json": "d32fbf88b9e73cfb25d8296be0cf613f7a4a682e8794ed0be1330f8e15994074",
+      "profiles/adults_2550_male_rural.json": "7fc3aa6ea08720acf128bf3a91be3f1e333dbe1b8abfa36bf4759ddbaf66765d",
+      "profiles/adults_2550_male_urban.json": "b0c0a148058c49f8b333da22aad13aac3a254fa3f1e88b1c666a7c0d12ed7fc2",
+      "profiles/adults_50up_female_rural.json": "b8b442dbc324ebe7f2a59a76c3ce45125c17c533c6e78a46c489b82515357813",
+      "profiles/adults_50up_female_urban.json": "24663c068c2592c81ddd1baefbcf7589f178dc6bacbf2c5703a99be5593cc136",
+      "profiles/adults_50up_male_rural.json": "b8b442dbc324ebe7f2a59a76c3ce45125c17c533c6e78a46c489b82515357813",
+      "profiles/adults_50up_male_urban.json": "24663c068c2592c81ddd1baefbcf7589f178dc6bacbf2c5703a99be5593cc136",
+      "profiles/fraud_adults_2550_female_rural.json": "e8a68ef81879cb60283703eeaccaab3cb995ae643e9621418b0e04ea78cfe1fa",
+      "profiles/fraud_adults_2550_female_urban.json": "3e7ebae40f6cf00e86913d14e2d14b2ed2360831e9f3037108f268bd2056e6f2",
+      "profiles/fraud_adults_2550_male_rural.json": "b1a9aa9b7f74d2eca5ef4df8affd5616ba869b43401fc71ca6e634e32a99e42d",
+      "profiles/fraud_adults_2550_male_urban.json": "bd943cef46475329277d4cb978bcebf75d62cbd8c1ea2957eb4027c42855cc17",
+      "profiles/fraud_adults_50up_female_rural.json": "a06f3e5563d0bd1fe7f66ebf825ca6fa8df00071c1217d0d821d085de675bd73",
+      "profiles/fraud_adults_50up_female_urban.json": "d9d30e847adb21c1adf0f591d85e566e3452f75dc01baabe1fc5799aa7943f4f",
+      "profiles/fraud_adults_50up_male_rural.json": "a06f3e5563d0bd1fe7f66ebf825ca6fa8df00071c1217d0d821d085de675bd73",
+      "profiles/fraud_adults_50up_male_urban.json": "d9d30e847adb21c1adf0f591d85e566e3452f75dc01baabe1fc5799aa7943f4f",
+      "profiles/fraud_leftovers.json": "8a317872d296bb7b8c803143873ff0209d0df3f07879238501c9f78b97227670",
+      "profiles/fraud_young_adults_female_rural.json": "a494db941d4d7dcf21d82d44b36e109b602d427d84f4428d749826610f212556",
+      "profiles/fraud_young_adults_female_urban.json": "75f995e9a16961779c99ff1fd15d8b9a1749880ec8cce505d72dcfca1d5c20d0",
+      "profiles/fraud_young_adults_male_rural.json": "a494db941d4d7dcf21d82d44b36e109b602d427d84f4428d749826610f212556",
+      "profiles/fraud_young_adults_male_urban.json": "75f995e9a16961779c99ff1fd15d8b9a1749880ec8cce505d72dcfca1d5c20d0",
+      "profiles/leftovers.json": "f25f2830de1e79f9b8c2a18e66b55f82355909fb1251533be6db9197490cfe78",
+      "profiles/main_config.json": "8ba31e2122567d77020d494b529d0ad63dda4aee0ad094a34d2ab7371bea4c6b",
+      "profiles/template.json": "b7d3e77810d4b081baf9252502df2e495c4c5f45f274bca6cac314b24c74c724",
+      "profiles/young_adults_female_rural.json": "4a367cbf571d9503edccdad38c4c530fbe7d5011f4788510319a6486b0ddc73b",
+      "profiles/young_adults_female_urban.json": "10166c1be5693be34e54f4584eed1a53ba2ebfa753f8278ca56f6bb96f820225",
+      "profiles/young_adults_male_rural.json": "4a367cbf571d9503edccdad38c4c530fbe7d5011f4788510319a6486b0ddc73b",
+      "profiles/young_adults_male_urban.json": "10166c1be5693be34e54f4584eed1a53ba2ebfa753f8278ca56f6bb96f820225"
+    },
+    "customer_generation": "Sparkov customer sampler with adult DOB sampling anchored to start date; equal customers per profile.",
+    "notes": [
+      "New customers, not a continuation of the original cardholders.",
+      "Upstream transaction and fraud rules are unchanged; prevalence may differ greatly from Kaggle.",
+      "Uniform profile coverage is a scenario design, not population weighting."
+    ]
+  }
+}

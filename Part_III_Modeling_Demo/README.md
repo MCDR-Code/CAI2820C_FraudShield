@@ -11,6 +11,11 @@ been retrained yet. The v2 model/results remain historical evidence, not v3
 results. Follow [Training and Model Sharing](Training_and_Model_Sharing.md) for
 the next run and Mac handoff. `main` and Phase II remain unchanged.
 
+[Synthetic Pilot](Synthetic_Pilot.md) documents the separate January 2021
+experiment: 60 new customers across all 12 Sparkov profiles, 4,597 generated
+transactions, and paired earlier-history/review CSVs. Generated data stays local;
+the original data and trained models are unchanged.
+
 ## Saved models and results
 
 | Experiment | Validation precision | Validation recall | Validation F1 | Official test |
