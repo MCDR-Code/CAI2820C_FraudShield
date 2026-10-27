@@ -14,8 +14,9 @@ This phase uses the FULL original Sparkov CSV pair. Part II's historical
 - `core.py` and `shared/`: the shared input contract and feature transformations
   used during both training and application inference.
 - `app.py` and `static/`: local CSV-upload review dashboard; no retraining on upload.
+- `history.py`: optional per-card history features.
 - `tests/`: focused regression tests for validation, identity/target exclusion,
-  threshold selection, and valid/invalid upload handling.
+  threshold selection, history features, and valid/invalid upload handling.
 - `results/`: original recorded aggregate metrics and charts. These are evidence,
   not runnable model artifacts or transaction datasets.
 - `Development_Results.md` and `Demo_Checklist.md`: interpretation and demo sequence.
@@ -76,6 +77,22 @@ the recorded test outcomes and present a later rerun on that file as unseen.
 Synthetic historical U.S. data, repeated customers and demographic/geographic
 proxies limit generalization. Subgroup checks are descriptive, not fairness
 certification or evidence of production readiness.
+
+## Optional: history features and gradient boosting (experimental)
+
+`python train.py --data-dir ../data --output-dir artifacts_new --history --models "Gradient Boosting"`
+adds 17 per-card history features (`history.py`; each row sees only earlier
+transactions on its card, never labels) and/or a gradient-boosting candidate.
+Defaults are unchanged, so the recorded run above still reproduces. On the
+validation window only, Gradient Boosting + 17 history features reached
+precision 96.6%, recall 96.7%, F1 0.966 (Random Forest baseline: 73.1% / 80.0% /
+0.764). Features were chosen after inspecting validation errors, so treat this
+as optimistic. It has NOT been evaluated on the official test. Step-by-step
+reasoning and caveats: `IMPROVEMENT_LOG.md`; `analyze_errors.py` breaks down
+validation errors; `tune.py` searches settings on an inner training split.
+A history model's dashboard uploads also need `cc_num` and `merchant`, and
+history is computed from the uploaded batch only. Set `FRAUDSHIELD_ARTIFACTS`
+to demo a different training run's folder.
 
 ## Upload contract and safety
 

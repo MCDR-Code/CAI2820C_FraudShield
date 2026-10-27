@@ -11,7 +11,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
-from core import REQUIRED, ROOT, load_bundle, validate_input
+from core import ROOT, load_bundle, required_columns, validate_input
+from history import HISTORY_FEATURES, history_with_context
 from train import metrics
 from shared.project_data import TARGET, sha256
 
@@ -32,12 +33,20 @@ def evaluate(artifacts=ROOT / 'artifacts', data_dir=None):
     if sha256(train_path) != locked['data']['train_sha256']:
         raise ValueError('The original training file changed; subgroup coverage cannot be verified.')
     # Labels are first opened only after the pipeline and threshold have been saved.
-    test = pd.read_csv(path, usecols=REQUIRED + [TARGET, 'cc_num'], dtype={'cc_num': 'string'})
-    validate_input(test)
+    history = bool(locked.get('history_features'))
+    columns = required_columns(history)
+    test = pd.read_csv(path, usecols=sorted(set(columns + [TARGET, 'cc_num'])), dtype={'cc_num': 'string'})
+    validate_input(test, history=history)
     if test[TARGET].isna().any() or set(test[TARGET].unique()) != {0, 1}:
         raise ValueError('Final test labels must contain both 0 and 1.')
     start = time.perf_counter()
-    scores = bundle['pipeline'].predict_proba(test[REQUIRED])[:, 1]
+    pipeline, inputs = bundle['pipeline'], test[columns]
+    if history:
+        # Test rows see earlier development-period transactions as context (labels are not used).
+        context = validate_input(pd.read_csv(train_path, usecols=columns, dtype={'cc_num': 'string'}), history=True)
+        inputs = inputs.join(history_with_context(context, validate_input(inputs, history=True)))
+        pipeline.set_params(features__history='precomputed')
+    scores = pipeline.predict_proba(inputs[required_columns(False) + (HISTORY_FEATURES if history else [])])[:, 1]
     seconds = time.perf_counter() - start
     result = {'evaluated_utc': datetime.now(timezone.utc).isoformat(), 'model': locked['selected_model'],
               'model_sha256': sha256(artifacts / 'selected_model.joblib'),

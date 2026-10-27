@@ -1,30 +1,43 @@
 """Shared input contract and saved inference pipeline for FraudShield."""
 
+import os
 from pathlib import Path
 import joblib
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
+from history import HISTORY_FEATURES, HISTORY_INPUTS, add_history
 from shared.project_data import CATEGORICAL, FEATURES, NUMERIC, derive_features
 
 ROOT = Path(__file__).resolve().parent
+# Saved-model folder; set FRAUDSHIELD_ARTIFACTS to demo a different training run.
+ARTIFACTS = Path(os.environ.get('FRAUDSHIELD_ARTIFACTS') or ROOT / 'artifacts')
 REQUIRED = ['trans_date_trans_time', 'dob', 'amt', 'city_pop', 'lat', 'long',
             'merch_lat', 'merch_long', 'category', 'gender', 'state']
 MAX_ROWS = 50000
 MAX_BYTES = 20 * 1024 * 1024
 
 
-def validate_input(raw):
+def required_columns(history=False):
+    return REQUIRED + HISTORY_INPUTS if history else REQUIRED
+
+
+def bundle_uses_history(bundle):
+    return bundle['pipeline']['features'].history == 'batch'
+
+
+def validate_input(raw, history=False):
     """Return a validated copy; never silently drop or impute uploaded rows."""
     if raw.empty:
         raise ValueError('The CSV contains no transactions.')
     if raw.columns.duplicated().any():
         raise ValueError('CSV column names must be unique.')
-    missing = sorted(set(REQUIRED) - set(raw.columns))
+    needed = required_columns(history)
+    missing = sorted(set(needed) - set(raw.columns))
     if missing:
         raise ValueError('Missing required columns: ' + ', '.join(missing))
     df = raw.copy()
-    for column in REQUIRED:
+    for column in needed:
         if df[column].isna().any() or df[column].astype(str).str.strip().eq('').any():
             raise ValueError(f'{column} contains missing or blank values.')
     for column in NUMERIC[:6]:
@@ -45,29 +58,47 @@ def validate_input(raw):
     for column, limit in [('lat', 90), ('merch_lat', 90), ('long', 180), ('merch_long', 180)]:
         if not df[column].between(-limit, limit).all():
             raise ValueError(f'{column} is outside the valid coordinate range.')
-    for column in CATEGORICAL:
+    for column in CATEGORICAL + (HISTORY_INPUTS if history else []):
         df[column] = df[column].astype(str).str.strip()
     return df
 
 
 class FeatureBuilder(TransformerMixin, BaseEstimator):
+    """history: 'none' (no history features), 'precomputed' (hist_* columns supplied,
+    used in training/evaluation where earlier periods give context) or 'batch'
+    (computed from the rows being scored, used by the saved model for uploads)."""
+
+    history = 'none'  # fallback so models pickled before this option still load
+
+    def __init__(self, history='none'):
+        self.history = history
+
     def fit(self, X, y=None):
         return self
 
     def transform(self, X):
-        return derive_features(validate_input(X))[FEATURES]
+        validated = validate_input(X, history=self.history == 'batch')
+        features = derive_features(validated)[FEATURES]
+        if self.history == 'batch':
+            features = features.join(add_history(validated))
+        elif self.history == 'precomputed':
+            missing = sorted(set(HISTORY_FEATURES) - set(X.columns))
+            if missing:
+                raise ValueError('Missing precomputed history columns: ' + ', '.join(missing))
+            features = features.join(X[HISTORY_FEATURES].astype(float))
+        return features
 
 
 def load_bundle(path=None):
     # Only load model files produced locally by this project, never uploaded joblib files.
-    path = Path(path or ROOT / 'artifacts/selected_model.joblib')
+    path = Path(path or ARTIFACTS / 'selected_model.joblib')
     if not path.exists():
         raise FileNotFoundError('No saved model. Run train.py before starting the demo.')
     return joblib.load(path)
 
 
 def score_transactions(raw, bundle):
-    validated = validate_input(raw)
+    validated = validate_input(raw, history=bundle_uses_history(bundle))
     scores = bundle['pipeline'].predict_proba(validated)[:, 1]
     result = pd.DataFrame({
         'row_number': np.arange(1, len(raw) + 1),

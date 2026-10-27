@@ -10,7 +10,8 @@ import pandas as pd
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from core import MAX_BYTES, MAX_ROWS, REQUIRED, ROOT, load_bundle, score_transactions, validate_input
+from core import (ARTIFACTS, MAX_BYTES, MAX_ROWS, ROOT, bundle_uses_history, load_bundle, required_columns,
+                  score_transactions, validate_input)
 
 app = FastAPI(title='FraudShield', docs_url=None, redoc_url=None)
 app.mount('/static', StaticFiles(directory=ROOT / 'static'), name='static')
@@ -29,7 +30,7 @@ def bundle():
 def analyze(df, source):
     if len(df) > MAX_ROWS:
         raise ValueError(f'Maximum batch size is {MAX_ROWS:,} transactions.')
-    validate_input(df)
+    validate_input(df, history=bundle_uses_history(bundle()))
     result = score_transactions(df, bundle())
     return {'source': source, 'rows': result.to_dict('records'),
             'total': len(result), 'flagged': int(result.review_flag.sum()),
@@ -46,14 +47,14 @@ def index():
 def metadata():
     try:
         saved = bundle()['metadata']
-        artifacts = ROOT / 'artifacts'
+        artifacts = ARTIFACTS
         test = artifacts / 'final_test.json'
         return {'model': saved['selected_model'], 'threshold': saved['threshold'],
                 'features': saved['feature_count'], 'created': saved['created_utc'],
                 'data': saved['data'], 'limitations': saved['limitations'],
                 'validation': pd.read_csv(artifacts / 'validation_comparison.csv').to_dict('records'),
                 'final_test': json.loads(test.read_text()) if test.exists() else None,
-                'required_columns': REQUIRED}
+                'required_columns': required_columns(bundle_uses_history(bundle()))}
     except FileNotFoundError as exc:
         return JSONResponse({'error': str(exc)}, status_code=503)
 
@@ -61,7 +62,7 @@ def metadata():
 @app.post('/api/sample')
 def sample():
     try:
-        df = pd.read_csv(ROOT / 'artifacts/demo_transactions.csv')
+        df = pd.read_csv(ARTIFACTS / 'demo_transactions.csv')
         return analyze(df, 'Validation demo sample (1,000 transactions)')
     except (ValueError, FileNotFoundError) as exc:
         return JSONResponse({'error': str(exc)}, status_code=400)
@@ -93,7 +94,7 @@ def upload(file: UploadFile = File(...)):
 
 @app.get('/api/validation-pr.png')
 def validation_chart():
-    path = ROOT / 'artifacts/validation_pr.png'
+    path = ARTIFACTS / 'validation_pr.png'
     if not path.exists():
         return JSONResponse({'error': 'No validation chart is available.'}, status_code=404)
     return FileResponse(path, media_type='image/png')
