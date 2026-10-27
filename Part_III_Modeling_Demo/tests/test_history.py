@@ -8,7 +8,7 @@ from sklearn.linear_model import LogisticRegression
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from core import score_transactions, validate_input
 from history import HISTORY_FEATURES, add_history, history_with_context
-from train import make_pipeline
+from train import load_gb_params, make_pipeline
 
 
 def stream(n=60, seed=0):
@@ -88,6 +88,11 @@ class HistoryTests(unittest.TestCase):
         pre.set_params(features__history='batch')
         scored = score_transactions(df, {'pipeline': pre, 'threshold': .5, 'metadata': {}})
         np.testing.assert_allclose(scored.sort_values('row_number').model_score, expected)
+
+    def test_gb_params_accept_json_and_tuning_results(self):
+        self.assertEqual(load_gb_params('{"max_iter": 5}'), {'max_iter': 5})
+        results = '{"results": [{"params": {"max_leaf_nodes": 63}}, {"params": {"max_leaf_nodes": 7}}]}'
+        self.assertEqual(load_gb_params(results), {'max_leaf_nodes': 63})
 
     def test_history_inputs_required(self):
         df = stream()

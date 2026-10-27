@@ -15,7 +15,8 @@ model ranks fraud above legitimate (threshold-free). Validation has 259,335 rows
 |---|---|---:|---:|---:|---:|---:|---:|
 | 0 | Random Forest (recorded baseline) | 73.1% | 80.0% | 0.764 | 0.844 | 453 | 307 |
 | 0 | Gradient Boosting + 8 history features (PR #1) | 90.4% | 86.4% | 0.883 | 0.942 | 142 | 209 |
-| 2 | Gradient Boosting + 17 history features | **96.6%** | **96.7%** | **0.966** | **0.989** | **53** | **51** |
+| 2 | Gradient Boosting + 17 history features | 96.6% | 96.7% | 0.966 | 0.989 | 53 | 51 |
+| 3 | Same, tuned settings | 97.1% | 96.0% | 0.965 | 0.989 | 44 | 62 |
 
 ## Step 1: error analysis of the current best model
 
@@ -82,3 +83,35 @@ that adding earlier context behaves like one continuous stream. No label is used
 
 **Decision:** keep. Target reached on validation, so tuning (Step 3) is optional; its value now is
 robustness, not reaching 95%.
+
+## Step 3: tune the gradient boosting settings
+
+**Question:** do better settings lift the 17-feature model, or is it already near its ceiling?
+
+**Method (`tune.py`):** random search of 12 settings (learning rate, iterations, leaves, minimum samples
+per leaf, L2, share of features per split, class weighting). Each was fitted on the earliest 75% of the
+training period and scored by average precision on the latest 25% of it. The validation window and the
+test file were not used. To fit in the available memory (2 GB free) only 25% of legitimate rows were
+kept in the fitting part; the hold-out was complete.
+
+**Search result:** hold-out AP ranged 0.973 to 0.986. Eight of twelve settings were within 0.003 of each
+other, i.e. the model is not sensitive to these settings. Best: learning rate 0.1, 200 iterations,
+63 leaves, min 100 samples per leaf, no L2, half the features per split, balanced weights.
+
+**Final comparison (`train.py --gb-params artifacts_tuning/tuning.json`, full training period, validation window):**
+
+| | Precision | Recall | F1 | AP | False alerts | Missed fraud | Threshold |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Untuned (31 leaves, min 20, all features) | 96.6% | 96.7% | 0.9662 | 0.9886 | 53 | 51 | 0.818 |
+| Tuned | 97.1% | 96.0% | 0.9653 | 0.9894 | 44 | 62 | 0.716 |
+
+**Reading it:** the tuned model has slightly higher precision and AP, slightly lower recall and F1; it
+moves along the same precision/recall trade-off instead of improving it. A difference of 9 false alerts
+and 11 missed cases out of 1,538 fraud is within what a different threshold or random seed would give.
+Tuning did not help meaningfully.
+
+**Decision:** keep the simpler untuned settings as the default (same quality, fewer moving parts).
+`--gb-params` stays available. The features, not the settings, produced the gain (Step 2).
+
+**Next ideas** (unchanged caveats apply: validation is optimistic, test not yet read): average several
+seeds for stability, try LightGBM/XGBoost, or evaluate once on the official test file.

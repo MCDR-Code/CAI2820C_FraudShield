@@ -71,6 +71,13 @@ def make_pipeline(classifier, history=False, dense=False):
     ])
 
 
+def load_gb_params(value):
+    """JSON text, a JSON file, or a tune.py results file (best trial's settings)."""
+    text = Path(value).read_text(encoding='utf-8') if Path(value).is_file() else value
+    data = json.loads(text)
+    return data['results'][0]['params'] if 'results' in data else data
+
+
 def demo_by_card(frame, limit=1000):
     """Whole validation histories of a few random cards, so batch history features are meaningful."""
     rng = np.random.RandomState(SEED)
@@ -86,7 +93,7 @@ def demo_by_card(frame, limit=1000):
 
 
 def train(data_dir, output_dir=ROOT / 'artifacts', trees=80, history=False,
-          candidates_to_fit=('Logistic Regression', 'Random Forest')):
+          candidates_to_fit=('Logistic Regression', 'Random Forest'), gb_params=None):
     data_dir, output_dir = Path(data_dir).resolve(), Path(output_dir).resolve()
     if output_dir.exists() and any(output_dir.iterdir()):
         raise ValueError('Output directory is not empty. Preserve this run and choose a NEW --output-dir.')
@@ -150,9 +157,9 @@ def train(data_dir, output_dir=ROOT / 'artifacts', trees=80, history=False,
         'Random Forest': RandomForestClassifier(n_estimators=trees, max_depth=18, min_samples_leaf=3,
                                                 max_samples=.6, class_weight='balanced_subsample',
                                                 n_jobs=4, random_state=SEED),
-        'Gradient Boosting': HistGradientBoostingClassifier(max_iter=200, learning_rate=.1, max_leaf_nodes=31,
-                                                            class_weight='balanced', early_stopping=False,
-                                                            random_state=SEED),
+        'Gradient Boosting': HistGradientBoostingClassifier(
+            **{'max_iter': 200, 'learning_rate': .1, 'max_leaf_nodes': 31, 'class_weight': 'balanced',
+               **(gb_params or {}), 'early_stopping': False, 'random_state': SEED}),
     }
     models = {k: v for k, v in models.items() if k in candidates_to_fit}
     for name, classifier in models.items():
@@ -217,8 +224,10 @@ if __name__ == '__main__':
     parser.add_argument('--trees', type=int, default=80)
     parser.add_argument('--models', default='Logistic Regression,Random Forest',
                         help='comma-separated candidates from: Logistic Regression, Random Forest, Gradient Boosting')
+    parser.add_argument('--gb-params', help='Gradient Boosting settings: JSON text, a JSON file, or tune.py output')
     parser.add_argument('--history', action='store_true', help='add per-card history features')
     args = parser.parse_args()
     if args.trees < 1:
         parser.error('--trees must be positive')
-    train(args.data_dir, args.output_dir, args.trees, args.history, tuple(args.models.split(',')))
+    train(args.data_dir, args.output_dir, args.trees, args.history, tuple(args.models.split(',')),
+          load_gb_params(args.gb_params) if args.gb_params else None)

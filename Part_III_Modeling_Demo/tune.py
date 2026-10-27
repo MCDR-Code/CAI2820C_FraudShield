@@ -17,7 +17,7 @@ from sklearn.metrics import average_precision_score
 from sklearn.pipeline import Pipeline
 
 from core import REQUIRED, ROOT, validate_input
-from history import HISTORY_FEATURES, add_history
+from history import HISTORY_FEATURES, HISTORY_INPUTS, add_history
 from shared.project_data import TARGET
 from train import SEED, make_pipeline
 
@@ -34,7 +34,7 @@ SPACE = {
 
 def development_split(data_dir, history=True):
     """Sorted development rows (with history features) and the train/validation boundary train.py uses."""
-    raw = pd.read_csv(Path(data_dir) / 'fraudTrain.csv', dtype={'cc_num': 'string'})
+    raw = pd.read_csv(Path(data_dir) / 'fraudTrain.csv', usecols=REQUIRED + HISTORY_INPUTS + [TARGET], dtype={'cc_num': 'string'})
     raw = validate_input(raw, history=True)
     stamps = pd.to_datetime(raw.trans_date_trans_time)
     raw = raw.iloc[np.argsort(stamps.to_numpy(), kind='stable')].reset_index(drop=True)
@@ -45,13 +45,18 @@ def development_split(data_dir, history=True):
     return raw, stamps, boundary
 
 
-def tune(data_dir, output, trials, history=True):
+def tune(data_dir, output, trials, history=True, negative_fraction=.25):
     raw, stamps, boundary = development_split(data_dir, history)
     # Tuning stays left of the validation boundary.
     training = raw.iloc[:boundary]
     inner = int(stamps.searchsorted(stamps.iloc[int(boundary * .75)], side='left'))
     columns = REQUIRED + (HISTORY_FEATURES if history else [])
     fit, hold = training.iloc[:inner], training.iloc[inner:]
+    if negative_fraction < 1:
+        # Memory saver: keep every fraud row but only a share of legitimate rows when fitting.
+        # The hold-out stays complete, so scores remain comparable between settings.
+        keep = (fit[TARGET] == 1) | (np.random.RandomState(SEED).rand(len(fit)) < negative_fraction)
+        fit = fit[keep]
     print(f'Tuning fit rows {len(fit):,} ({int(fit[TARGET].sum())} fraud); '
           f'holdout rows {len(hold):,} ({int(hold[TARGET].sum())} fraud)', flush=True)
     prep = Pipeline(make_pipeline(None, history, dense=True).steps[:-1]).fit(fit[columns])
@@ -80,5 +85,6 @@ if __name__ == '__main__':
     parser.add_argument('--output', type=Path, default=ROOT / 'artifacts_tuning/tuning.json')
     parser.add_argument('--trials', type=int, default=20)
     parser.add_argument('--no-history', action='store_true')
+    parser.add_argument('--negative-fraction', type=float, default=.25, help='share of legitimate rows kept when fitting (1 = all)')
     args = parser.parse_args()
-    tune(args.data_dir, args.output, args.trials, not args.no_history)
+    tune(args.data_dir, args.output, args.trials, not args.no_history, args.negative_fraction)
