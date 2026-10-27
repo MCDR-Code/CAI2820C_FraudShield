@@ -140,8 +140,24 @@ Context is browser-session-scoped, stored only in local server RAM, expires
 after one hour, and is explicitly clearable. At most four sessions are retained;
 the oldest is evicted when another is added. Invalid legacy replacement clears
 the previous context; invalid browser additions preserve it. Review errors never substitute demo results. Downloads
-omit names, addresses, birth dates, card IDs and labels and escape spreadsheet
-formula text. Uploads are not persisted by the application.
+omit names, addresses, birth dates and card IDs and escape spreadsheet formula
+text. When the review CSV supplies `is_fraud`, downloads include the actual
+label and evaluation outcome. Uploads are not persisted by the application.
+
+The upload screen evaluates this file's predictions against optional `is_fraud`
+labels AFTER scoring. Labels must be 0/1 on every row when supplied; missing or
+invalid labels are rejected rather than reported as a partial evaluation.
+Precision, recall, F1, accuracy and all four confusion counts are shown, with
+undefined measures displayed as N/A. Row labels are aligned using original row
+numbers after score sorting. Unlabeled files still score normally, with a clear
+message that correctness cannot be measured. This is separate from the saved
+validation/test records under Model evaluation, and does not train the model.
+
+Browser result state is separate for Random Forest, Gradient Boosting and the
+history view. Switching tabs/models restores each batch, metrics, error and
+filter state. Clear affects only the current batch; a successful history change
+invalidates only the history review batch. State lasts for this page session,
+not a page refresh or server restart. Backend history expiry still applies.
 
 No original/reduced/demo transaction files, context files, binaries, ZIPs or
 credentials are committed. Local generated files stay under ignored `artifacts/`.

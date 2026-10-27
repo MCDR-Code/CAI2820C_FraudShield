@@ -107,11 +107,37 @@ def save_context(request, response, frame, source, files=None, duplicates_remove
     return context_summary(context)
 
 
+def upload_evaluation(labels, result):
+    """Evaluate AFTER scoring; align labels by original row position, not score order."""
+    truth = labels.iloc[result.row_number.to_numpy() - 1].to_numpy(dtype=int)
+    flags = result.review_flag.to_numpy(dtype=bool)
+    tp = int(((truth == 1) & flags).sum())
+    fp = int(((truth == 0) & flags).sum())
+    fn = int(((truth == 1) & ~flags).sum())
+    tn = int(((truth == 0) & ~flags).sum())
+    result['actual_is_fraud'] = truth
+    result['evaluation_result'] = pd.Series(truth * 2 + flags.astype(int)).map({
+        0: 'Correctly cleared', 1: 'False alert', 2: 'Missed fraud', 3: 'Correct alert'}).to_numpy()
+    return {'rows': len(result), 'actual_fraud': tp + fn, 'actual_legitimate': tn + fp,
+            'true_positives': tp, 'false_positives': fp, 'false_negatives': fn, 'true_negatives': tn,
+            'precision': tp / (tp + fp) if tp + fp else None,
+            'recall': tp / (tp + fn) if tp + fn else None,
+            'f1': 2 * tp / (2 * tp + fp + fn) if 2 * tp + fp + fn else None,
+            'accuracy': (tp + tn) / len(result)}
+
+
 def analyze(df, source, model='baseline', context=None):
+    labels = None
+    if 'is_fraud' in df:
+        labels = pd.to_numeric(df['is_fraud'], errors='coerce')
+        if not labels.isin([0, 1]).all():
+            raise ValueError('is_fraud must contain a 0 or 1 for every transaction to evaluate this file.')
     saved = bundle(model)
     validate_input(df, history=bundle_uses_history(saved))
     result = score_transactions(df, saved, context=context)
+    evaluation = upload_evaluation(labels, result) if labels is not None else None
     answer = {'source': source, 'rows': result.to_dict('records'), 'model_id': model,
+              'evaluation': evaluation,
               'total': len(result), 'flagged': int(result.review_flag.sum()),
               'flagged_amount': float(result.loc[result.review_flag, 'amount_usd'].sum()),
               'threshold': saved['threshold']}
