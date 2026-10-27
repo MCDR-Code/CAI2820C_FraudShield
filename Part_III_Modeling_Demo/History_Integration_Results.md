@@ -1,5 +1,9 @@
 # Phase III integration of Juan's improvements
 
+**Historical v2 record:** PR #2 was incorporated on October 27 for history v3
+(17 history features). The v3 model has not been retrained; numbers and hashes
+below describe v2 only. See `Training_and_Model_Sharing.md` for the new run.
+
 October 22, 2026. Based on Juan Franceschi's PR #1 commit
 7a730784334cb12e981100f4376dd40ccc9c05d0. Local integration branch:
 `phase-iii-history-context`. No merge to main or remote publication is implied.

@@ -31,7 +31,7 @@ _lock = Lock()
 def artifact_dir(model):
     if model not in MODEL_NAMES:
         raise ValueError('Unknown model.')
-    directory = ROOT / 'artifacts' / model
+    directory = ROOT / 'artifacts' / ('history_v3' if model == 'history' else model)
     if model == 'baseline' and not directory.exists():
         return ROOT / 'artifacts'
     return directory

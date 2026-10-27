@@ -48,6 +48,6 @@ def verify(data_dir, artifacts):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--data-dir', type=Path, required=True)
-    parser.add_argument('--artifacts', type=Path, default=Path('artifacts/history'))
+    parser.add_argument('--artifacts', type=Path, default=Path('artifacts/history_v3'))
     args = parser.parse_args()
     print(json.dumps(verify(args.data_dir, args.artifacts), indent=2))

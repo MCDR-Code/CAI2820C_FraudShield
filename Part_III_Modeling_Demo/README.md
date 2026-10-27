@@ -5,13 +5,20 @@ Sparkov train/test pair, with no card reduction. Juan Franceschi contributed the
 history-feature and Gradient Boosting proposal in PR #1. The integration retains
 those ideas with strictly earlier timestamp groups and explicit scoring context.
 
+**October 27 update:** PR #2 is incorporated into `phase-iii-history-context`.
+History v3 has 17 history features (95 total on the full dataset). It has NOT
+been retrained yet. The v2 model/results remain historical evidence, not v3
+results. Follow [Training and Model Sharing](Training_and_Model_Sharing.md) for
+the next run and Mac handoff. `main` and Phase II remain unchanged.
+
 ## Saved models and results
 
 | Experiment | Validation precision | Validation recall | Validation F1 | Official test |
 | --- | ---: | ---: | ---: | --- |
 | Original Random Forest | 73.10% | 80.04% | 0.76412 | Previously measured: 68.93% precision, 75.10% recall |
 | Gradient Boosting | 87.72% | 81.73% | 0.84618 | Not evaluated |
-| Corrected Gradient Boosting + history | 90.85% | 85.24% | 0.87957 | Not evaluated |
+| Corrected Gradient Boosting + 8 history features (v2 record) | 90.85% | 85.24% | 0.87957 | Not evaluated |
+| Gradient Boosting + 17 history features (v3) | Awaiting training | Awaiting training | Awaiting training | Not evaluated |
 
 These are validation comparisons, not new independent holdout results. The
 official test was already observed in the original project. Do not tune against
@@ -36,8 +43,10 @@ Use Python 3.12. From this phase folder, with sufficient RAM:
 python -m pip install -r requirements-tested.txt
 python train.py --data-dir ../data --output-dir artifacts/baseline
 python train.py --data-dir ../data --output-dir artifacts/boosting --models "Gradient Boosting"
-python train.py --data-dir ../data --output-dir artifacts/history --history --models "Gradient Boosting"
-python verify_context.py --data-dir ../data --artifacts artifacts/history
+python train.py --data-dir ../data --output-dir artifacts/history_v3 --history --models "Gradient Boosting"
+python verify_context.py --data-dir ../data --artifacts artifacts/history_v3
+python analyze_errors.py --data-dir ../data --artifacts artifacts/history_v3
+python check_model.py --artifacts artifacts/history_v3
 python -m unittest discover -s tests -v
 python -m uvicorn app:app --host 127.0.0.1 --port 8766
 ```
@@ -48,11 +57,11 @@ a deliberate experiment, not an overwrite of recorded artifacts. The original
 baseline's published aggregate results are in `results/`; a new baseline fit
 does not automatically recreate its recorded final-test artifact.
 
-The executed notebook embeds the corrected source and original aggregate
-baseline evidence for standalone Colab execution. Run All requests the original
-CSV pair or a ZIP in a fresh runtime. It trains missing new artifacts, reuses
-compatible saved ones, and verifies history/inference parity. It never calls
-`evaluate.py` or parses official test labels for evaluation.
+The executed notebook currently preserves the October 22 v2 run and embedded
+v2 source. It is historical evidence, NOT the executable v3 training workflow.
+Do not use its Run All to train v3. Use the commands above until we refresh its
+source and measured outputs after the new training run. It never evaluated the
+new models on official test labels.
 
 `evaluate.py` remains a separate deliberate tool. New GB/history candidates
 require `--acknowledge-observed-test` for a retrospective evaluation. That
@@ -94,7 +103,8 @@ to match the contextual validation table. Validation uses the earlier training
 period as context and the later development period as the review batch. The
 same `history_with_context` function and saved precomputed-feature pipeline are
 used by inference. `verify_context.py` measured zero score difference on all
-259,335 validation rows after the corrections.
+259,335 validation rows for v2. Run it again for v3 after retraining; no new
+parity result is claimed until then.
 
 ## Upload schema and safety
 
@@ -127,11 +137,17 @@ This is a classroom prototype, not an authenticated production banking service.
 
 - `results/`: original baseline evidence, new validation-only experiment records,
   corrected context parity report and comparison table.
-- `Team_A_Model_Development_and_Demo_ran.ipynb`: current executed notebook.
+- `Team_A_Model_Development_and_Demo_ran.ipynb`: historical v2 executed notebook;
+  refresh after v3 training rather than reuse its old numbers.
 - `train.py`, `history.py`, `core.py`, `verify_context.py`: development and shared
   inference logic. `shared/project_data.py` retains Part II feature functions.
 - `tests/`: input/privacy checks, threshold logic, strictly earlier history,
   same-time/order handling, context parity, cold starts and session isolation.
 - `History_Integration_Results.md`: provenance, changes and measured limitations.
+- `analyze_errors.py`: validation error breakdown with model-version, source
+  fingerprint, metadata and split checks. `tune.py` and `--gb-params` remain
+  optional; new v3 training keeps the untuned settings by default.
+- `model_sharing.py` / `check_model.py`: file/source checksums, environment checks
+  and matching example predictions for trusted team-generated models.
 
 The Phase II report/notebook are not changed by these Phase III improvements.

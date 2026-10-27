@@ -7,6 +7,7 @@ import time
 import warnings
 from datetime import datetime, timezone
 from pathlib import Path
+from importlib.metadata import version
 
 import joblib
 import matplotlib
@@ -27,6 +28,7 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 from core import CATEGORICAL, NUMERIC, REQUIRED, ROOT, FeatureBuilder, required_columns, validate_input
 from history import HISTORY_FEATURES, HISTORY_VERSION, add_history, history_with_context
+from model_sharing import record_model_files
 from shared.project_data import TARGET, quality_checks, sha256
 
 SEED = 42
@@ -192,7 +194,7 @@ def train(data_dir, output_dir=ROOT / 'artifacts', trees=80, history=False,
               'data': provenance,
               'feature_count': len(pipeline['preprocess'].get_feature_names_out()),
               'environment': {'python': platform.python_version(), 'pandas': pd.__version__, 'numpy': np.__version__,
-                              'scikit_learn': sklearn.__version__, 'joblib': joblib.__version__},
+                              'scipy': version('scipy'), 'scikit_learn': sklearn.__version__, 'joblib': joblib.__version__},
               'parameters': {k: c.get_params() for k, c in models.items()},
               'limitations': ['Synthetic historical U.S. data; no claim of banking performance.',
                               'Known customers cross time periods by design; new-customer results may differ.',
@@ -222,6 +224,7 @@ def train(data_dir, output_dir=ROOT / 'artifacts', trees=80, history=False,
     else:
         demo = V.sample(n=min(1000, len(V)), random_state=SEED)
     demo.to_csv(output_dir / 'demo_transactions.csv', index=False)
+    record_model_files(output_dir, locked, pipeline, demo, identities if history else None)
     print(f'Locked {selected["model"]}; artifacts: {output_dir}', flush=True)
     return locked, table
 
