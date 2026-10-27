@@ -1,0 +1,211 @@
+{
+  "generation": {
+    "upstream_url": "https://github.com/namebrandon/Sparkov_Data_Generation",
+    "upstream_commit": "b5eb45c89d36f2aa4ef16044a42945bed8b96d93",
+    "seed": 20211027,
+    "start": "2021-01-01",
+    "end": "2021-12-31",
+    "customers_per_profile": null,
+    "customer_count": 999,
+    "profile_customer_counts": {
+      "adults_2550_female_rural.json": 84,
+      "adults_2550_female_urban.json": 84,
+      "adults_2550_male_rural.json": 84,
+      "adults_2550_male_urban.json": 83,
+      "adults_50up_female_rural.json": 83,
+      "adults_50up_female_urban.json": 83,
+      "adults_50up_male_rural.json": 83,
+      "adults_50up_male_urban.json": 83,
+      "young_adults_female_rural.json": 83,
+      "young_adults_female_urban.json": 83,
+      "young_adults_male_rural.json": 83,
+      "young_adults_male_urban.json": 83
+    },
+    "workers": 4,
+    "profiles": [
+      "adults_2550_female_rural.json",
+      "adults_2550_female_urban.json",
+      "adults_2550_male_rural.json",
+      "adults_2550_male_urban.json",
+      "adults_50up_female_rural.json",
+      "adults_50up_female_urban.json",
+      "adults_50up_male_rural.json",
+      "adults_50up_male_urban.json",
+      "young_adults_female_rural.json",
+      "young_adults_female_urban.json",
+      "young_adults_male_rural.json",
+      "young_adults_male_urban.json"
+    ],
+    "environment": {
+      "python": "3.12.0",
+      "faker": "13.12.0",
+      "numpy": "1.26.4"
+    },
+    "wrapper_sha256": "108b24e9356e59beb1d20f8bd533bc5717c8f91721f7dc82862010872eade821",
+    "upstream_sha256": {
+      "datagen_customer.py": "6f2f98d6a26f14ee4eb90d062d77e6ac06a172cf338b5db9893b8dd88a8b0a58",
+      "datagen_transaction.py": "bd181b3bd513b8ef452c0da74761eccee012d06a6d379def6ebf700f8fcbeb94",
+      "profile_weights.py": "0c8f28d4625c7b046dfe4200df458676378140299917b317fa40562986b20270",
+      "main_config.py": "3d024fb2601c02d85c03d1bf3903c82231a5b5f6662ad438da6b3a94007089df",
+      "data/merchants.csv": "c3fcc3bead7901e0ed049f6548a30afec23e0e00bf3c3c4d2af59c63d34d9809",
+      "demographic_data/locations_partitions.csv": "ac4c6ab550fc7d2756e4a76bdaf07f2489194d0d0423ff39916bdf8412683ba9",
+      "demographic_data/age_gender_demographics.csv": "2ff0a0c4baefa24f1a2e8775d86aba5ef08a28e93258af4cd9b65faa2777f9b2",
+      "profiles/adults_2550_female_rural.json": "e596e7466f4fb154941b8745c63452b59ab37291f8a0db2ae26dc54b63c4cdb1",
+      "profiles/adults_2550_female_urban.json": "d32fbf88b9e73cfb25d8296be0cf613f7a4a682e8794ed0be1330f8e15994074",
+      "profiles/adults_2550_male_rural.json": "7fc3aa6ea08720acf128bf3a91be3f1e333dbe1b8abfa36bf4759ddbaf66765d",
+      "profiles/adults_2550_male_urban.json": "b0c0a148058c49f8b333da22aad13aac3a254fa3f1e88b1c666a7c0d12ed7fc2",
+      "profiles/adults_50up_female_rural.json": "b8b442dbc324ebe7f2a59a76c3ce45125c17c533c6e78a46c489b82515357813",
+      "profiles/adults_50up_female_urban.json": "24663c068c2592c81ddd1baefbcf7589f178dc6bacbf2c5703a99be5593cc136",
+      "profiles/adults_50up_male_rural.json": "b8b442dbc324ebe7f2a59a76c3ce45125c17c533c6e78a46c489b82515357813",
+      "profiles/adults_50up_male_urban.json": "24663c068c2592c81ddd1baefbcf7589f178dc6bacbf2c5703a99be5593cc136",
+      "profiles/fraud_adults_2550_female_rural.json": "e8a68ef81879cb60283703eeaccaab3cb995ae643e9621418b0e04ea78cfe1fa",
+      "profiles/fraud_adults_2550_female_urban.json": "3e7ebae40f6cf00e86913d14e2d14b2ed2360831e9f3037108f268bd2056e6f2",
+      "profiles/fraud_adults_2550_male_rural.json": "b1a9aa9b7f74d2eca5ef4df8affd5616ba869b43401fc71ca6e634e32a99e42d",
+      "profiles/fraud_adults_2550_male_urban.json": "bd943cef46475329277d4cb978bcebf75d62cbd8c1ea2957eb4027c42855cc17",
+      "profiles/fraud_adults_50up_female_rural.json": "a06f3e5563d0bd1fe7f66ebf825ca6fa8df00071c1217d0d821d085de675bd73",
+      "profiles/fraud_adults_50up_female_urban.json": "d9d30e847adb21c1adf0f591d85e566e3452f75dc01baabe1fc5799aa7943f4f",
+      "profiles/fraud_adults_50up_male_rural.json": "a06f3e5563d0bd1fe7f66ebf825ca6fa8df00071c1217d0d821d085de675bd73",
+      "profiles/fraud_adults_50up_male_urban.json": "d9d30e847adb21c1adf0f591d85e566e3452f75dc01baabe1fc5799aa7943f4f",
+      "profiles/fraud_leftovers.json": "8a317872d296bb7b8c803143873ff0209d0df3f07879238501c9f78b97227670",
+      "profiles/fraud_young_adults_female_rural.json": "a494db941d4d7dcf21d82d44b36e109b602d427d84f4428d749826610f212556",
+      "profiles/fraud_young_adults_female_urban.json": "75f995e9a16961779c99ff1fd15d8b9a1749880ec8cce505d72dcfca1d5c20d0",
+      "profiles/fraud_young_adults_male_rural.json": "a494db941d4d7dcf21d82d44b36e109b602d427d84f4428d749826610f212556",
+      "profiles/fraud_young_adults_male_urban.json": "75f995e9a16961779c99ff1fd15d8b9a1749880ec8cce505d72dcfca1d5c20d0",
+      "profiles/leftovers.json": "f25f2830de1e79f9b8c2a18e66b55f82355909fb1251533be6db9197490cfe78",
+      "profiles/main_config.json": "8ba31e2122567d77020d494b529d0ad63dda4aee0ad094a34d2ab7371bea4c6b",
+      "profiles/template.json": "b7d3e77810d4b081baf9252502df2e495c4c5f45f274bca6cac314b24c74c724",
+      "profiles/young_adults_female_rural.json": "4a367cbf571d9503edccdad38c4c530fbe7d5011f4788510319a6486b0ddc73b",
+      "profiles/young_adults_female_urban.json": "10166c1be5693be34e54f4584eed1a53ba2ebfa753f8278ca56f6bb96f820225",
+      "profiles/young_adults_male_rural.json": "4a367cbf571d9503edccdad38c4c530fbe7d5011f4788510319a6486b0ddc73b",
+      "profiles/young_adults_male_urban.json": "10166c1be5693be34e54f4584eed1a53ba2ebfa753f8278ca56f6bb96f820225"
+    },
+    "customer_generation": "Reused saved customers unchanged, including DOB and profile assignments.",
+    "notes": [
+      "Same customers as supplied saved customer file; no new identities or profile assignments.",
+      "Upstream transaction and fraud rules are unchanged; prevalence may differ greatly from Kaggle.",
+      "Uniform profile coverage is a scenario design, not population weighting."
+    ],
+    "customer_source_sha256": "9ebe109a2624f49525b583ba379f94238ca3e9445c4b4a71e49d61602687ff96",
+    "zero_transaction_retries": [
+      {
+        "profile": "adults_50up_female_urban.json",
+        "customer_count": 1,
+        "seed": 21212032,
+        "customer_file": "coverage\\1_5_customers.psv",
+        "transaction_file": "raw\\coverage_1_5.psv"
+      },
+      {
+        "profile": "young_adults_male_rural.json",
+        "customer_count": 1,
+        "seed": 21212037,
+        "customer_file": "coverage\\1_10_customers.psv",
+        "transaction_file": "raw\\coverage_1_10.psv"
+      },
+      {
+        "profile": "young_adults_male_urban.json",
+        "customer_count": 1,
+        "seed": 21212038,
+        "customer_file": "coverage\\1_11_customers.psv",
+        "transaction_file": "raw\\coverage_1_11.psv"
+      }
+    ],
+    "completion_code_sha256": "4bde472ebaf4a1ff40f67c6fe4109fa98fd24d8d26770056252751e6b58f853f"
+  },
+  "rows": 1000384,
+  "cards": 999,
+  "profiles": 12,
+  "fraud": 10277,
+  "fraud_percent": 1.027305514682362,
+  "first_transaction": "2021-01-01 00:00:14",
+  "last_transaction": "2021-12-31 23:59:56",
+  "previous_card_overlap": {
+    "fraudTrain.csv": 0,
+    "fraudTest.csv": 0,
+    "pilot_transactions.csv": 0
+  },
+  "quality": "All rows passed input/quality validation; transaction IDs unique across all years.",
+  "years": {
+    "2021": {
+      "file": "transactions_2021.csv",
+      "rows": 1000384,
+      "cards": 999,
+      "fraud": 10277,
+      "fraud_percent": 1.027305514682362,
+      "first_transaction": "2021-01-01 00:00:14",
+      "last_transaction": "2021-12-31 23:59:56",
+      "bytes": 267185320,
+      "sha256": "ca3451d537dcbde8a61ecea7a067558bf45aa3270984e32071674451907030a0"
+    }
+  },
+  "profile_counts": {
+    "adults_2550_female_rural.json": {
+      "cards": 84,
+      "rows": 110682,
+      "fraud": 966
+    },
+    "adults_2550_female_urban.json": {
+      "cards": 84,
+      "rows": 110822,
+      "fraud": 709
+    },
+    "adults_2550_male_rural.json": {
+      "cards": 84,
+      "rows": 79850,
+      "fraud": 908
+    },
+    "adults_2550_male_urban.json": {
+      "cards": 83,
+      "rows": 85847,
+      "fraud": 743
+    },
+    "adults_50up_female_rural.json": {
+      "cards": 83,
+      "rows": 75025,
+      "fraud": 798
+    },
+    "adults_50up_female_urban.json": {
+      "cards": 83,
+      "rows": 42392,
+      "fraud": 769
+    },
+    "adults_50up_male_rural.json": {
+      "cards": 83,
+      "rows": 80724,
+      "fraud": 727
+    },
+    "adults_50up_male_urban.json": {
+      "cards": 83,
+      "rows": 46028,
+      "fraud": 769
+    },
+    "young_adults_male_rural.json": {
+      "cards": 83,
+      "rows": 91890,
+      "fraud": 977
+    },
+    "young_adults_male_urban.json": {
+      "cards": 83,
+      "rows": 103862,
+      "fraud": 994
+    },
+    "young_adults_female_rural.json": {
+      "cards": 83,
+      "rows": 77064,
+      "fraud": 964
+    },
+    "young_adults_female_urban.json": {
+      "cards": 83,
+      "rows": 96198,
+      "fraud": 953
+    }
+  },
+  "customers_sha256": "9ebe109a2624f49525b583ba379f94238ca3e9445c4b4a71e49d61602687ff96",
+  "preparation_code_sha256": "4bde472ebaf4a1ff40f67c6fe4109fa98fd24d8d26770056252751e6b58f853f",
+  "model_training": false,
+  "model_evaluation": false,
+  "notes": [
+    "All transactions are newly simulated, including dates later than today.",
+    "Year files share the same new customers; they are not train/test splits.",
+    "Earlier years can supply history; future transactions must never be history for earlier ones."
+  ]
+}

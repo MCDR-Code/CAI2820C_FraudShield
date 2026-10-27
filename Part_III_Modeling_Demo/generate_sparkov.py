@@ -177,6 +177,7 @@ if __name__ == '__main__':
     parser.add_argument('--start', type=datetime.fromisoformat, default=datetime(2022, 1, 1))
     parser.add_argument('--end', type=datetime.fromisoformat, default=datetime(2026, 12, 31))
     parser.add_argument('--customers', type=int, default=999)
+    parser.add_argument('--customer-file', type=Path, help='Reuse saved pipe-delimited Sparkov customer records unchanged.')
     parser.add_argument('--customers-per-profile', type=int, default=1, help=argparse.SUPPRESS)
     parser.add_argument('--workers', type=int, choices=range(1, 13), default=4)
     parser.add_argument('--seed', type=int, default=20221027)
@@ -184,6 +185,8 @@ if __name__ == '__main__':
     arguments = parser.parse_args()
     arguments.output = arguments.output.resolve()
     arguments.generator_dir = arguments.generator_dir.resolve()
+    if arguments.customer_file:
+        arguments.customer_file = arguments.customer_file.resolve()
     if arguments.worker:
         worker(arguments)
         complete_customers(arguments)

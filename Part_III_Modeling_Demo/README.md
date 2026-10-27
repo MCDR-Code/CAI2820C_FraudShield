@@ -22,6 +22,9 @@ actual distinct-card count, with one compatible labeled CSV per year.
 
 [Expanded Training](Expanded_Training.md) describes the separate combined
 training file and copied unexecuted notebook, with all three training algorithms.
+The active data folder is `data/expanded_training_2021_2026`: original training
+plus new 2021–2025 rows in `fraudTrain.csv`, with 2026 reserved in `fraudTest.csv`.
+The general joining command is [join_csvs.py](join_csvs.py).
 
 ## Saved models and results
 

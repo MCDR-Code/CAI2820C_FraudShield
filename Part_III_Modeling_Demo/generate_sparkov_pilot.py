@@ -101,20 +101,36 @@ def worker(args):
             born = first + timedelta(days=random.randrange((last - first).days + 1))
             return gender[0], born.isoformat(), age
 
-    generator = SimulationCustomer(config, args.seed)
-    customers, cards = [], set()
-    for attempt in range(200000):
-        row = generator.generate_customer()
-        record = dict(zip(dc.headers, row))
-        name, card = record['profile'], record['cc_num']
-        if name in wanted and wanted[name] and card not in cards:
-            customers.append(row)
-            cards.add(card)
-            wanted[name] -= 1
-        if not any(wanted.values()):
-            break
+    reuse = getattr(args, 'customer_file', None)
+    if reuse:
+        with Path(reuse).open(encoding='utf-8', newline='') as stream:
+            reader = csv.DictReader(stream, delimiter='|')
+            if reader.fieldnames != dc.headers:
+                raise ValueError('Existing customer file has a different Sparkov schema.')
+            records = list(reader)
+        if len({record['cc_num'] for record in records}) != len(records):
+            raise ValueError('Existing customer card IDs are not unique.')
+        if any(record['profile'] not in names for record in records):
+            raise ValueError('Existing customer profile is not configured.')
+        customers = [[record[column] for column in dc.headers] for record in records]
+        profile_customer_counts = {name: sum(record['profile'] == name for record in records) for name in names}
+        if not all(profile_customer_counts.values()):
+            raise ValueError('Existing customers must cover all profiles.')
     else:
-        raise ValueError(f'Could not fill every profile: {wanted}')
+        generator = SimulationCustomer(config, args.seed)
+        customers, cards = [], set()
+        for attempt in range(200000):
+            row = generator.generate_customer()
+            record = dict(zip(dc.headers, row))
+            name, card = record['profile'], record['cc_num']
+            if name in wanted and wanted[name] and card not in cards:
+                customers.append(row)
+                cards.add(card)
+                wanted[name] -= 1
+            if not any(wanted.values()):
+                break
+        else:
+            raise ValueError(f'Could not fill every profile: {wanted}')
     customer_file = output / 'customers.psv'
     with customer_file.open('w', newline='', encoding='utf-8') as stream:
         writer = csv.writer(stream, delimiter='|')
@@ -152,6 +168,10 @@ def worker(args):
                   'Upstream transaction and fraud rules are unchanged; prevalence may differ greatly from Kaggle.',
                   'Uniform profile coverage is a scenario design, not population weighting.'],
     }
+    if reuse:
+        metadata.update({'customer_generation': 'Reused saved customers unchanged, including DOB and profile assignments.',
+                         'customer_source_sha256': digest(reuse)})
+        metadata['notes'][0] = 'Same customers as supplied saved customer file; no new identities or profile assignments.'
     (output / 'generation.json').write_text(json.dumps(metadata, indent=2), encoding='utf-8')
 
 
