@@ -16,6 +16,10 @@ experiment: 60 new customers across all 12 Sparkov profiles, 4,597 generated
 transactions, and paired earlier-history/review CSVs. Generated data stays local;
 the original data and trained models are unchanged.
 
+[Full Synthetic Data 2022–2026](Synthetic_Data_2022_2026.md) describes the separate
+five-year generation for 999 new customers, matching the original dataset's
+actual distinct-card count, with one compatible labeled CSV per year.
+
 ## Saved models and results
 
 | Experiment | Validation precision | Validation recall | Validation F1 | Official test |

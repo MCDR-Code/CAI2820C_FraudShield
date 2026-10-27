@@ -21,6 +21,7 @@ import platform
 import random
 import subprocess
 import sys
+from concurrent.futures import ProcessPoolExecutor
 from datetime import datetime, timedelta, date
 
 ROOT = Path(__file__).resolve().parent
@@ -29,6 +30,21 @@ UPSTREAM = 'b5eb45c89d36f2aa4ef16044a42945bed8b96d93'
 
 def digest(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def generate_profile(task):
+    """Isolated process: deterministic streams independent of worker scheduling."""
+    source, customer_file, name, start, end, destination, seed = task
+    os.chdir(source)
+    sys.path.insert(0, str(source))
+    import numpy as np
+    from faker import Faker
+    import datagen_transaction as dt
+    random.seed(seed)
+    np.random.seed(seed)
+    Faker.seed(seed)
+    dt.main(customer_file, source / 'profiles' / name, start, end, destination)
+    return name
 
 
 def worker(args):
@@ -57,6 +73,13 @@ def worker(args):
     config = source / 'profiles/main_config.json'
     names = sorted(json.loads(config.read_text()))
     wanted = {name: args.customers_per_profile for name in names}
+    total = getattr(args, 'customers', None)
+    if total is not None:
+        if total < len(names):
+            raise ValueError('Customer count must cover every configured profile.')
+        quotient, remainder = divmod(total, len(names))
+        wanted = {name: quotient + (index < remainder) for index, name in enumerate(names)}
+    profile_customer_counts = wanted.copy()
 
     class SimulationCustomer(dc.Customer):
         def generate_age_gender(self):
@@ -97,22 +120,29 @@ def worker(args):
         writer = csv.writer(stream, delimiter='|')
         writer.writerow(dc.headers)
         writer.writerows(customers)
-    for index, name in enumerate(names):
-        # Independent deterministic streams per profile, no multiprocessing races.
-        random.seed(args.seed + 1000 + index)
-        np.random.seed(args.seed + 1000 + index)
-        Faker.seed(args.seed + 1000 + index)
-        print(f'Generating {name}', flush=True)
-        dt.main(customer_file, source / 'profiles' / name, args.start, args.end,
-                output / 'raw' / name.replace('.json', '.psv'))
+    tasks = [(source, customer_file, name, args.start, args.end,
+              output / 'raw' / name.replace('.json', '.psv'), args.seed + 1000 + index)
+             for index, name in enumerate(names)]
+    workers = getattr(args, 'workers', 1)
+    if workers == 1:
+        for task in tasks:
+            print(f'Generating {task[2]}', flush=True)
+            generate_profile(task)
+    else:
+        with ProcessPoolExecutor(max_workers=workers) as pool:
+            for name in pool.map(generate_profile, tasks):
+                print(f'Completed {name}', flush=True)
     source_files = ['datagen_customer.py', 'datagen_transaction.py', 'profile_weights.py',
-                    'main_config.py', 'data/merchants.csv']
+                    'main_config.py', 'data/merchants.csv',
+                    'demographic_data/locations_partitions.csv',
+                    'demographic_data/age_gender_demographics.csv']
     source_files += [str(p.relative_to(source)).replace('\\', '/') for p in sorted((source / 'profiles').glob('*.json'))]
     metadata = {
         'upstream_url': 'https://github.com/namebrandon/Sparkov_Data_Generation',
         'upstream_commit': revision, 'seed': args.seed,
         'start': args.start.date().isoformat(), 'end': args.end.date().isoformat(),
-        'customers_per_profile': args.customers_per_profile, 'customer_count': len(customers),
+        'customers_per_profile': args.customers_per_profile if total is None else None, 'customer_count': len(customers),
+        'profile_customer_counts': profile_customer_counts, 'workers': workers,
         'profiles': names, 'environment': {'python': platform.python_version(),
                                         'faker': faker.VERSION, 'numpy': np.__version__},
         'wrapper_sha256': digest(__file__),
