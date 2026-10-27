@@ -101,7 +101,10 @@ def train(data_dir, output_dir=ROOT / 'artifacts', trees=80, history=False,
         raise ValueError('Output directory is not empty. Preserve this run and choose a NEW --output-dir.')
     output_dir.mkdir(parents=True, exist_ok=True)
     print('Loading full development data; test labels remain unread.', flush=True)
-    raw = pd.read_csv(data_dir / 'fraudTrain.csv', dtype={'cc_num': 'string'})
+    # Large experiments need only scoring inputs, target and transaction ID.
+    # Avoid retaining millions of unused names/addresses alongside model arrays.
+    needed = list(dict.fromkeys(REQUIRED + required_columns(True) + [TARGET, 'trans_num'])) if expanded_data else None
+    raw = pd.read_csv(data_dir / 'fraudTrain.csv', dtype={'cc_num': 'string'}, usecols=needed)
     if not expanded_data and len(raw) != 1296675:
         raise ValueError('This phase requires the full original fraudTrain.csv (1,296,675 rows), not a reduced subset.')
     quality, _ = quality_checks(raw)

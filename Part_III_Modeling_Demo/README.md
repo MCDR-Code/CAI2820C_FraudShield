@@ -4,6 +4,13 @@
 
 **October 27, 2026 — `phase-iii-history-context`**
 
+**Expanded training completed:** the executed notebook finished in **28 minutes
+45 seconds**, including loading, feature construction, fitting and verification.
+On 1,265,132 validation transactions, expanded Gradient Boosting with history
+achieved **95.87% precision, 90.12% recall, 88 false alerts and 224 missed fraud**.
+The 2026 test labels remain unused. New artifacts are saved separately and have
+not been installed over the demo models. See [expanded training results](Expanded_Training_Results.md).
+
 - **Model/history integration:** PR #2 adds Juan's nine additional history
   features, giving 17 history features and 95 total on the original full dataset.
   All history uses strictly earlier timestamps; simultaneous purchases cannot
@@ -29,8 +36,8 @@
   contains **960,579** generated 2026 rows and is excluded from fitting/validation.
 - **Separate notebook:** [expanded training notebook](Team_A_Expanded_Data_Model_Training.ipynb)
   offers Logistic Regression, Random Forest and Gradient Boosting, plus the v3
-  history experiment. It saves new artifacts separately. **Full expanded training
-  and v3 retraining have not run**; the demo still uses previously saved models
+  history experiment. It saves new artifacts separately. **Expanded training is
+  complete**; the demo still uses previously installed models
   where available. The original Random Forest and submitted work are preserved.
 
 Only code, notebook, instructions and aggregate evidence are shared. Dataset CSVs
@@ -46,10 +53,11 @@ history-feature and Gradient Boosting proposal in PR #1. The integration retains
 those ideas with strictly earlier timestamp groups and explicit scoring context.
 
 **October 27 update:** PR #2 is incorporated into `phase-iii-history-context`.
-History v3 has 17 history features (95 total on the full dataset). It has NOT
-been retrained yet. The v2 model/results remain historical evidence, not v3
-results. Follow [Training and Model Sharing](Training_and_Model_Sharing.md) for
-the next run and Mac handoff. `main` and Phase II remain unchanged.
+History v3 has 17 history features (95 total here). It has now been trained on
+the expanded data; see the separate results above. An original-data-only v3 run
+has not been performed. The v2 model/results remain historical evidence.
+Follow [Training and Model Sharing](Training_and_Model_Sharing.md), using the new
+artifact paths in the results report, for Mac handoff. `main` and Phase II remain unchanged.
 
 [Synthetic Pilot](Synthetic_Pilot.md) documents the separate January 2021
 experiment: 60 new customers across all 12 Sparkov profiles, 4,597 generated
@@ -68,7 +76,8 @@ The general joining command is [join_csvs.py](join_csvs.py).
 The combined training data starts in 2019 (original January 2019–June 2020 plus
 generated 2021–2025), despite the folder name. It contains 6,325,651 transactions;
 the separate 2026 test contains 960,579. These dataset CSVs are local only and
-excluded from GitHub. The new notebook is ready but has not run full training.
+excluded from GitHub. The new notebook has completed training; its executed copy
+and [results](Expanded_Training_Results.md) document the run.
 
 ## Saved models and results
 
@@ -77,7 +86,7 @@ excluded from GitHub. The new notebook is ready but has not run full training.
 | Original Random Forest | 73.10% | 80.04% | 0.76412 | Previously measured: 68.93% precision, 75.10% recall |
 | Gradient Boosting | 87.72% | 81.73% | 0.84618 | Not evaluated |
 | Corrected Gradient Boosting + 8 history features (v2 record) | 90.85% | 85.24% | 0.87957 | Not evaluated |
-| Gradient Boosting + 17 history features (v3) | Awaiting training | Awaiting training | Awaiting training | Not evaluated |
+| Original-data-only + 17 history features (v3) | Not run | Not run | Not run | Not evaluated |
 
 These are validation comparisons, not new independent holdout results. The
 official test was already observed in the original project. Do not tune against

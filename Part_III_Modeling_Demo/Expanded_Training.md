@@ -66,8 +66,10 @@ equal timestamps together. An absent future test is recorded with null test
 counts/hashes. If supplied, a test file's chronology and ID isolation are checked
 without reading fraud labels during training.
 
-No full expanded training was performed. A tiny automated-test fit verified
-the opt-in, missing-test metadata and saved-model sharing check. Run the copied
+Full expanded training completed on October 27 in **28 minutes 45 seconds**.
+See [results](Expanded_Training_Results.md) and the separate executed notebook
+`Team_A_Expanded_Data_Model_Training_ran.ipynb`. A tiny automated-test fit also
+verified the opt-in, missing-test metadata and saved-model sharing check. Run the copied
 notebook locally from the Phase III folder, or use its Colab setup and point
 DATA_DIR at a Drive/upload folder containing the combined file. Choose a new
 RUN_NAME on subsequent runs; completed model folders are not overwritten.

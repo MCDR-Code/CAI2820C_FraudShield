@@ -10,8 +10,9 @@ Team: Jorge Alvarez V, Mariela Del Rio, Javier Elizalde Ramirez and Juan Frances
 
 On `phase-iii-history-context`, the [October 27 change summary](Part_III_Modeling_Demo/README.md#latest-changes)
 lists the model/history integration, demo improvements, CSV joining tool, and
-expanded training/test split. The copied notebook is ready; full expanded-data
-training has not run. Dataset CSVs remain local and excluded from GitHub.
+expanded training/test split. Expanded training completed in 28 minutes 45 seconds;
+see [results](Part_III_Modeling_Demo/Expanded_Training_Results.md). Dataset CSVs
+and model binaries remain local and excluded from GitHub.
 
 ## Project phases
 
@@ -27,7 +28,8 @@ or describe preparation as classifier training.
 
 The completed Part II DOCX and its executed notebook are submitted directly to
 the instructor. The report links to this repository for supporting files. The
-DOCX is not duplicated here. Each phase has only one executed notebook.
+DOCX is not duplicated here. Historical executed notebooks are preserved; the
+expanded training experiment has its own separate executed notebook.
 
 ## Data sources
 
