@@ -2,6 +2,11 @@
 
 Original notebooks, original train/test files and saved models are unchanged.
 
+Training begins in **2019**, not 2021: it includes the original January 2019–June
+2020 training data plus generated 2021–2025 data. The folder name describes the
+generated period. The 2026 file is test only. All dataset CSVs stay local;
+GitHub contains the code, notebook, instructions and aggregate results.
+
 Ready locally:
 
 - `data/expanded_training_2021_2026/fraudTrain.csv`: **6,325,651 transactions**:

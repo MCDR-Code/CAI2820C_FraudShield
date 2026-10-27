@@ -25,6 +25,10 @@ training file and copied unexecuted notebook, with all three training algorithms
 The active data folder is `data/expanded_training_2021_2026`: original training
 plus new 2021–2025 rows in `fraudTrain.csv`, with 2026 reserved in `fraudTest.csv`.
 The general joining command is [join_csvs.py](join_csvs.py).
+The combined training data starts in 2019 (original January 2019–June 2020 plus
+generated 2021–2025), despite the folder name. It contains 6,325,651 transactions;
+the separate 2026 test contains 960,579. These dataset CSVs are local only and
+excluded from GitHub. The new notebook is ready but has not run full training.
 
 ## Saved models and results
 
