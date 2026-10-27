@@ -1,5 +1,6 @@
 """Shared input contract and saved inference pipeline for FraudShield."""
 
+import os
 from pathlib import Path
 import joblib
 import numpy as np
@@ -9,6 +10,8 @@ from history import HISTORY_FEATURES, HISTORY_INPUTS, add_history
 from shared.project_data import CATEGORICAL, FEATURES, NUMERIC, derive_features
 
 ROOT = Path(__file__).resolve().parent
+# Saved-model folder; set FRAUDSHIELD_ARTIFACTS to demo a different training run.
+ARTIFACTS = Path(os.environ.get('FRAUDSHIELD_ARTIFACTS') or ROOT / 'artifacts')
 REQUIRED = ['trans_date_trans_time', 'dob', 'amt', 'city_pop', 'lat', 'long',
             'merch_lat', 'merch_long', 'category', 'gender', 'state']
 MAX_ROWS = 50000
@@ -88,7 +91,7 @@ class FeatureBuilder(TransformerMixin, BaseEstimator):
 
 def load_bundle(path=None):
     # Only load model files produced locally by this project, never uploaded joblib files.
-    path = Path(path or ROOT / 'artifacts/selected_model.joblib')
+    path = Path(path or ARTIFACTS / 'selected_model.joblib')
     if not path.exists():
         raise FileNotFoundError('No saved model. Run train.py before starting the demo.')
     return joblib.load(path)

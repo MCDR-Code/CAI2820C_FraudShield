@@ -6,7 +6,11 @@ import pandas as pd
 HISTORY_INPUTS = ['cc_num', 'merchant']
 HISTORY_FEATURES = ['hist_prior_count', 'hist_amt_to_prior_mean', 'hist_amt_to_prior_max',
                     'hist_log_secs_since_prev', 'hist_count_24h', 'hist_new_merchant',
-                    'hist_new_category', 'hist_dist_from_prev_km']
+                    'hist_new_category', 'hist_dist_from_prev_km',
+                    'hist_count_1h', 'hist_count_6h', 'hist_log_amt_sum_24h', 'hist_high_amt_count_72h',
+                    'hist_night_count_72h', 'hist_category_share', 'hist_hour_share',
+                    'hist_amt_zscore', 'hist_amt_to_category_mean']
+HOUR = 3600
 DAY = 86400
 GAP_CAP = 30 * DAY
 KEY_SPAN = 2 ** 40
@@ -52,11 +56,45 @@ def add_history(df):
     log_gap = np.log1p(np.where(np.isnan(gap), GAP_CAP, np.minimum(gap, GAP_CAP)))
 
     keys = s_card.astype(np.int64) * KEY_SPAN + (s_ts - s_ts.min())
-    count_24h = np.searchsorted(keys, keys, 'left') - np.searchsorted(keys, keys - DAY, 'left')
+    before = np.searchsorted(keys, keys, 'left')
+
+    def window(seconds):
+        return before, np.searchsorted(keys, keys - seconds, 'left')
+
+    def window_sum(values, seconds):
+        # Sum of `values` over this card's earlier rows inside the trailing window.
+        prefix = np.r_[0.0, np.cumsum(values)]
+        upper, lower = window(seconds)
+        return prefix[upper] - prefix[lower]
+
+    ones = np.ones(n)
+    count_24h = window_sum(ones, DAY)
+    count_1h, count_6h = window_sum(ones, HOUR), window_sum(ones, 6 * HOUR)
+    amt_sum_24h = window_sum(amt, DAY)
+    hour = (s_ts % DAY) // HOUR
+    is_night = ((hour >= 22) | (hour <= 3)).astype(float)
+    is_high = ((prior_count >= 5) & (mean_ratio > 3)).astype(float)
+    high_72h, night_72h = window_sum(is_high, 3 * DAY), window_sum(is_night, 3 * DAY)
+
+    with np.errstate(divide='ignore', invalid='ignore'):
+        prior_mean = prior_sum / np.maximum(prior_count, 1)
+        prior_sq = np.cumsum(amt ** 2)
+        prior_sq = prior_sq - amt ** 2 - (prior_sq[start] - amt[start] ** 2)
+        std = np.sqrt(np.clip(prior_sq / np.maximum(prior_count, 1) - prior_mean ** 2, 0, None))
+        zscore = np.where(prior_count >= 2, np.clip((amt - prior_mean) / np.maximum(std, 1e-9), -10, 50), 0.0)
 
     frame = pd.DataFrame({'c': s_card, 'm': merchant, 'k': category})
     new_merchant = frame.groupby(['c', 'm']).cumcount().eq(0).to_numpy()
     new_category = frame.groupby(['c', 'k']).cumcount().eq(0).to_numpy()
+
+    habit = pd.DataFrame({'c': s_card, 'k': category, 'h': hour, 'a': amt})
+    category_n = habit.groupby(['c', 'k']).cumcount().to_numpy()
+    hour_n = habit.groupby(['c', 'h']).cumcount().to_numpy()
+    category_sum = habit.groupby(['c', 'k']).a.cumsum().to_numpy() - amt
+    with np.errstate(divide='ignore', invalid='ignore'):
+        category_share = np.where(prior_count > 0, category_n / np.maximum(prior_count, 1), 0.0)
+        hour_share = np.where(prior_count > 0, hour_n / np.maximum(prior_count, 1), 0.0)
+        category_ratio = np.where(category_n > 0, amt / (category_sum / np.maximum(category_n, 1)), 1.0)
 
     prev_lat = pd.Series(mlat).groupby(s_card).shift(1).to_numpy()
     prev_lon = pd.Series(mlon).groupby(s_card).shift(1).to_numpy()
@@ -64,7 +102,9 @@ def add_history(df):
 
     out = np.empty((n, len(HISTORY_FEATURES)))
     out[order] = np.column_stack([prior_count, mean_ratio, max_ratio, log_gap, count_24h,
-                                  new_merchant, new_category, distance])
+                                  new_merchant, new_category, distance,
+                                  count_1h, count_6h, np.log1p(amt_sum_24h), high_72h, night_72h,
+                                  category_share, hour_share, zscore, category_ratio])
     return pd.DataFrame(out, columns=HISTORY_FEATURES, index=df.index)
 
 

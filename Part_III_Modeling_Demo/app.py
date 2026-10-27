@@ -10,7 +10,7 @@ import pandas as pd
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from core import (MAX_BYTES, MAX_ROWS, ROOT, bundle_uses_history, load_bundle, required_columns,
+from core import (ARTIFACTS, MAX_BYTES, MAX_ROWS, ROOT, bundle_uses_history, load_bundle, required_columns,
                   score_transactions, validate_input)
 
 app = FastAPI(title='FraudShield', docs_url=None, redoc_url=None)
@@ -47,7 +47,7 @@ def index():
 def metadata():
     try:
         saved = bundle()['metadata']
-        artifacts = ROOT / 'artifacts'
+        artifacts = ARTIFACTS
         test = artifacts / 'final_test.json'
         return {'model': saved['selected_model'], 'threshold': saved['threshold'],
                 'features': saved['feature_count'], 'created': saved['created_utc'],
@@ -62,7 +62,7 @@ def metadata():
 @app.post('/api/sample')
 def sample():
     try:
-        df = pd.read_csv(ROOT / 'artifacts/demo_transactions.csv')
+        df = pd.read_csv(ARTIFACTS / 'demo_transactions.csv')
         return analyze(df, 'Validation demo sample (1,000 transactions)')
     except (ValueError, FileNotFoundError) as exc:
         return JSONResponse({'error': str(exc)}, status_code=400)
@@ -94,7 +94,7 @@ def upload(file: UploadFile = File(...)):
 
 @app.get('/api/validation-pr.png')
 def validation_chart():
-    path = ROOT / 'artifacts/validation_pr.png'
+    path = ARTIFACTS / 'validation_pr.png'
     if not path.exists():
         return JSONResponse({'error': 'No validation chart is available.'}, status_code=404)
     return FileResponse(path, media_type='image/png')

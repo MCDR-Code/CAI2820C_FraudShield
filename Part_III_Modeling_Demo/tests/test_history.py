@@ -39,6 +39,23 @@ class HistoryTests(unittest.TestCase):
         self.assertEqual(h.hist_new_category.tolist(), [1, 0, 1])
         self.assertAlmostEqual(h.hist_log_secs_since_prev[1], np.log1p(3600))
 
+    def test_recent_activity_and_habit_values(self):
+        df = pd.DataFrame({
+            'trans_date_trans_time': ['2020-01-01 10:00:00', '2020-01-01 10:30:00', '2020-01-01 23:00:00',
+                                      '2020-01-01 23:10:00'],
+            'cc_num': ['a'] * 4, 'merchant': ['m1'] * 4, 'category': ['x', 'x', 'y', 'x'],
+            'amt': [10., 30., 20., 50.], 'merch_lat': [0.] * 4, 'merch_long': [0.] * 4})
+        h = add_history(df)
+        self.assertEqual(h.hist_count_1h.tolist(), [0, 1, 0, 1])
+        self.assertEqual(h.hist_count_6h.tolist(), [0, 1, 0, 1])
+        self.assertEqual(h.hist_night_count_72h.tolist(), [0, 0, 0, 1])
+        np.testing.assert_allclose(h.hist_category_share, [0, 1, 0, 2 / 3])
+        np.testing.assert_allclose(h.hist_hour_share, [0, 1, 0, 1 / 3])
+        np.testing.assert_allclose(h.hist_amt_to_category_mean, [1.0, 3.0, 1.0, 50 / 20])
+        self.assertEqual(h.hist_amt_zscore[0], 0.0)
+        self.assertAlmostEqual(h.hist_amt_zscore[2], (20 - 20) / 10)  # prior amounts 10, 30: mean 20, std 10
+        self.assertAlmostEqual(h.hist_log_amt_sum_24h[3], np.log1p(10 + 30 + 20))
+
     def test_no_lookahead(self):
         df = stream()
         full = add_history(df)
@@ -78,7 +95,7 @@ class HistoryTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 validate_input(df.drop(columns=column), history=True)
             validate_input(df.drop(columns=column), history=False)
-        self.assertEqual(len(HISTORY_FEATURES), 8)
+        self.assertEqual(len(set(HISTORY_FEATURES)), len(HISTORY_FEATURES))
 
 
 if __name__ == '__main__':

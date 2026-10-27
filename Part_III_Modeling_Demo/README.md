@@ -81,13 +81,18 @@ certification or evidence of production readiness.
 ## Optional: history features and gradient boosting (experimental)
 
 `python train.py --data-dir ../data --output-dir artifacts_new --history --models "Gradient Boosting"`
-adds eight per-card history features (`history.py`; each row sees only earlier
-transactions on its card) and/or a gradient-boosting candidate. Defaults are
-unchanged, so the recorded run above still reproduces. On validation only,
-Gradient Boosting + history reached precision 90.4%, recall 86.4%, F1 0.883
-(Random Forest baseline: 73.1% / 80.0% / 0.764). It has NOT been evaluated on
-the official test. A history model's dashboard uploads also need `cc_num` and
-`merchant`, and history is computed from the uploaded batch only.
+adds 17 per-card history features (`history.py`; each row sees only earlier
+transactions on its card, never labels) and/or a gradient-boosting candidate.
+Defaults are unchanged, so the recorded run above still reproduces. On the
+validation window only, Gradient Boosting + 17 history features reached
+precision 96.6%, recall 96.7%, F1 0.966 (Random Forest baseline: 73.1% / 80.0% /
+0.764). Features were chosen after inspecting validation errors, so treat this
+as optimistic. It has NOT been evaluated on the official test. Step-by-step
+reasoning and caveats: `IMPROVEMENT_LOG.md`; `analyze_errors.py` breaks down
+validation errors; `tune.py` searches settings on an inner training split.
+A history model's dashboard uploads also need `cc_num` and `merchant`, and
+history is computed from the uploaded batch only. Set `FRAUDSHIELD_ARTIFACTS`
+to demo a different training run's folder.
 
 ## Upload contract and safety
 
