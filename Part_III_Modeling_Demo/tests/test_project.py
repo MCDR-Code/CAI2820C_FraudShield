@@ -71,6 +71,19 @@ class ProjectTests(unittest.TestCase):
             self.assertIn('error', response.json())
             self.assertNotIn('rows', response.json())
 
+    def test_upload_over_previous_row_limit_scores_every_row(self):
+        previous = web._bundle
+        web._bundle = self.saved
+        try:
+            frame = example(50002)
+            response = TestClient(web.app).post('/api/analyze', files={
+                'file': ('large.csv', frame.to_csv(index=False).encode())})
+            self.assertEqual(response.status_code, 200, response.text[:200])
+            self.assertEqual(response.json()['total'], len(frame))
+            self.assertEqual(len(response.json()['rows']), len(frame))
+        finally:
+            web._bundle = previous
+
     def test_valid_upload_and_numeric_strings(self):
         previous = web._bundle
         web._bundle = self.saved

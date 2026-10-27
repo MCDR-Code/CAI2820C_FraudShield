@@ -12,15 +12,13 @@ from fastapi import FastAPI, File, Request, Response, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from core import MAX_BYTES, MAX_ROWS, ROOT, bundle_uses_history, load_bundle, required_columns, score_transactions, validate_input
+from core import ROOT, bundle_uses_history, load_bundle, required_columns, score_transactions, validate_input
 from history import HISTORY_VERSION
 
 app = FastAPI(title='FraudShield', docs_url=None, redoc_url=None)
 app.mount('/static', StaticFiles(directory=ROOT / 'static'), name='static')
 MODEL_NAMES = {'baseline': 'Random Forest baseline', 'boosting': 'Gradient Boosting',
                'history': 'Gradient Boosting + customer history'}
-MAX_HISTORY_ROWS = 2_000_000
-MAX_HISTORY_BYTES = 512 * 1024 * 1024
 CONTEXT_TTL = 3600
 _bundle = None
 _bundles = {}
@@ -56,24 +54,17 @@ def read_upload(file, history=False):
         filename = (file.filename or '').replace('\\', '/').rsplit('/', 1)[-1]
         if not filename.lower().endswith('.csv'):
             raise ValueError('Choose a .csv file.')
-        limit = MAX_HISTORY_BYTES if history else MAX_BYTES
-        raw = file.file.read(limit + 1)
-        if len(raw) > limit:
-            raise ValueError(f'CSV exceeds the {limit // (1024 * 1024)} MB limit.')
-        if not raw:
-            raise ValueError('The uploaded file is empty.')
-        text = raw.decode('utf-8-sig')
-        header = next(csv.reader(io.StringIO(text)), [])
-        # Sparkov's original CSV exports its row index with an empty first heading.
-        # Pandas names that unused field Unnamed: 0; other blank headings remain errors.
-        if header and header[0] == '':
-            header[0] = 'Unnamed: 0'
-        if not header or any(not name.strip() for name in header) or len(set(header)) != len(header):
-            raise ValueError('CSV column names must be nonempty and unique.')
-        maximum = MAX_HISTORY_ROWS if history else MAX_ROWS
-        frame = pd.read_csv(io.StringIO(text), nrows=maximum + 1, dtype={'cc_num': 'string'})
-        if len(frame) > maximum:
-            raise ValueError(f'Maximum batch size is {maximum:,} transactions.')
+        # Read directly from FastAPI's spooled upload. Avoid retaining a full
+        # bytes copy and a second decoded string alongside a large dataframe.
+        with io.TextIOWrapper(file.file, encoding='utf-8-sig', newline='') as text:
+            header = next(csv.reader(text), [])
+            # Original Sparkov exports its unused row index with a blank heading.
+            if header and header[0] == '':
+                header[0] = 'Unnamed: 0'
+            if not header or any(not name.strip() for name in header) or len(set(header)) != len(header):
+                raise ValueError('CSV column names must be nonempty and unique.')
+            text.seek(0)
+            frame = pd.read_csv(text, dtype={'cc_num': 'string'})
         return frame, filename
     finally:
         file.file.close()
@@ -115,8 +106,6 @@ def save_context(request, response, frame, source):
 
 
 def analyze(df, source, model='baseline', context=None):
-    if len(df) > MAX_ROWS:
-        raise ValueError(f'Maximum batch size is {MAX_ROWS:,} transactions.')
     saved = bundle(model)
     validate_input(df, history=bundle_uses_history(saved))
     result = score_transactions(df, saved, context=context)

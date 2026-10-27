@@ -11,8 +11,6 @@ from shared.project_data import CATEGORICAL, FEATURES, NUMERIC, derive_features
 ROOT = Path(__file__).resolve().parent
 REQUIRED = ['trans_date_trans_time', 'dob', 'amt', 'city_pop', 'lat', 'long',
             'merch_lat', 'merch_long', 'category', 'gender', 'state']
-MAX_ROWS = 50000
-MAX_BYTES = 20 * 1024 * 1024
 
 
 def required_columns(history=False):

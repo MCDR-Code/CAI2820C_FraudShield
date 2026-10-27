@@ -124,11 +124,11 @@ Card IDs are imported as text. Timestamp normalization has second resolution.
 Invalid dates, blank values, nonfinite numbers, bad coordinates, nonpositive
 amounts, negative population and ages outside 0-120 are rejected.
 
-Earlier context accepts up to 2,000,000 rows / 512 MB, enough for the original
-training CSV. Review uploads retain the 50,000-row / 20 MB interactive limit;
-the full test CSV must be divided into chronological batches for interactive
-review. Full-data validation is performed by the notebook/verification script,
-not by transmitting hundreds of thousands of rows to the browser.
+History and review uploads have no fixed byte or transaction-count limit.
+CSV parsing reads directly from the spooled upload, avoiding full-file byte and
+decoded-text copies. Available memory and processing time still determine the
+practical file size. The browser shows the first 100 matching results; the full
+scored result is available in the download. Each input still accepts one CSV.
 
 Context is browser-session-scoped, stored only in local server RAM, expires
 after one hour, and is explicitly clearable. At most four sessions are retained;

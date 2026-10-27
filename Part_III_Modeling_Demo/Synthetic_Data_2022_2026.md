@@ -115,9 +115,15 @@ from the earlier one-month run. Equal profile coverage also differs from
 population weighting. These files are additional synthetic scenarios, not an
 exact reproduction of the Kaggle author's unrecorded settings.
 
-The current demo still accepts one CSV per input and has its previously
-documented upload limits. Large yearly files may exceed those limits. This
-generation does not add multi-file uploads, remove limits, retrain v3 or change
-the training program's original-dataset requirements.
+The demo accepts one CSV per input. A follow-up removed fixed file-size and row
+caps, so full-year files can be loaded, subject to available memory and processing
+time. This generation does not add multi-file uploads, retrain v3 or change the
+training program's original-dataset requirements.
+
+The upload update passed 39 automated tests. A complete `transactions_2022.csv`
+upload (964,197 rows / 258,971,874 bytes) was also scored through the demo endpoint
+using the saved Random Forest: HTTP 200, all 964,197 results returned, no row
+truncation. This is a compatibility check, not a reported performance evaluation
+against the new fraud labels. Large uploads still need time and memory.
 
 Source: [Pinned Sparkov generator](https://github.com/namebrandon/Sparkov_Data_Generation/tree/b5eb45c89d36f2aa4ef16044a42945bed8b96d93).
