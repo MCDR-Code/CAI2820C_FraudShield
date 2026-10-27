@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from train import load_gb_params
 from history import (DAY, GAP_CAP, HISTORY_FEATURES, HOUR, _haversine_km, add_history,
                      history_with_context)
 
@@ -122,6 +123,13 @@ class StrictHistoryTests(unittest.TestCase):
         context, review = self.frame[times < boundary], self.frame[times >= boundary]
         pd.testing.assert_frame_equal(history_with_context(context, review),
                                       add_history(self.frame).loc[review.index])
+
+
+class SettingsOptionTests(unittest.TestCase):
+    def test_gb_params_accept_json_and_tuning_results(self):
+        self.assertEqual(load_gb_params('{"max_iter": 5}'), {'max_iter': 5})
+        results = '{"results": [{"params": {"max_leaf_nodes": 63}}, {"params": {"max_leaf_nodes": 7}}]}'
+        self.assertEqual(load_gb_params(results), {'max_leaf_nodes': 63})
 
 
 if __name__ == '__main__':
