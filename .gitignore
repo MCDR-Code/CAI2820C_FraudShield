@@ -21,20 +21,27 @@ data/
 *.docx
 *.pdf
 *.csv
-!Part_II_Data_Preparation/evidence/existing_sample_cards.csv
-!Part_III_Modeling_Demo/results/validation_comparison.csv
-!Part_III_Modeling_Demo/results/test_subgroups.csv
-!Part_III_Modeling_Demo/results/integration_validation.csv
+!Part_II/evidence/existing_sample_cards.csv
+!Part_III/Results/Historical/*.csv
+!Part_III/Results/fixed_validation_comparison.csv
+!Part_III/Results/fixed_final_evaluation_summary.csv
 *.ipynb
 !*_ran.ipynb
-!Part_III_Modeling_Demo/Team_A_Expanded_Data_Model_Training.ipynb
+!Part_III/References/Historical/Team_A_Expanded_Data_Model_Training.ipynb
 ~$*
 
 # Corrected final experiment: aggregate evidence and submission forms only.
-!Part_III_Modeling_Demo/Team_A_Final_Evaluation_2026.ipynb
-!Part_III_Modeling_Demo/results/fixed_validation_comparison.csv
-!Part_III_Modeling_Demo/results/fixed_final_evaluation_summary.csv
-!docs/final_submission/*.docx
+!Part_III/Modeling/Team_A_Final_Evaluation_2026.ipynb
+!Part_III/Deliverables/*.docx
+!Part_II/Deliverables/*.docx
+!Part_I/Deliverables/*.pptx
+!Final_Demo/Presentation/*.pptx
+Data/
+Models/
+Archive/
+Part_I/Archive/
+Part_III/Results/*_log.txt
+Part_III/Results/local_cleanup_*.json
 
 # Submission forms are maintained at repository root.
 !Team_A_Final_Project_Model_Evaluation_Metrics.docx

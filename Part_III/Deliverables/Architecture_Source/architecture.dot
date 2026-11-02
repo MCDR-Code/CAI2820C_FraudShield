@@ -1,0 +1,33 @@
+digraph FraudShield {
+  rankdir=TB; nodesep=0.35; ranksep=0.45;
+  graph [fontname="Helvetica", fontsize=11, bgcolor="white", pad=0.2];
+  node  [fontname="Helvetica", fontsize=10, shape=box, style="rounded,filled", fillcolor="#EAF1F8", color="#1F4E79", penwidth=1.2, margin="0.15,0.08"];
+  edge  [fontname="Helvetica", fontsize=9, color="#404040"];
+
+  subgraph cluster_in { label="1. Input"; style="rounded,dashed"; color="#7F7F7F"; fontcolor="#404040";
+    review  [label="Review batch CSV\n(new transactions)"];
+    history [label="Card history CSVs\n(earlier transactions,\nlabels not used)"];
+  }
+  subgraph cluster_prep { label="2. Preprocessing (FastAPI server, local)"; style="rounded,dashed"; color="#7F7F7F"; fontcolor="#404040";
+    validate [label="Validate schema & values\n(reject bad rows, no silent drops)"];
+    hist     [label="17 per-card history features\n(strictly earlier timestamps only)"];
+    feats    [label="Transaction features\n(hour, age, distance; scaling,\none-hot fitted on training only)"];
+  }
+  subgraph cluster_model { label="3. Model"; style="rounded,dashed"; color="#7F7F7F"; fontcolor="#404040";
+    model [label="Gradient Boosting + history\n(frozen, 95 features)\nthreshold 0.961", fillcolor="#DCE9D5", color="#38761D"];
+  }
+  subgraph cluster_out { label="4. Output"; style="rounded,dashed"; color="#7F7F7F"; fontcolor="#404040";
+    queue    [label="Ranked review queue\n(score, flag, prior-history status)"];
+    download [label="CSV download\n(no names, addresses, DOB, card IDs)"];
+  }
+  analyst [label="Fraud analyst\nconfirms / clears each alert", shape=box, fillcolor="#FCE5CD", color="#B45F06"];
+  monitor [label="Monitoring & retraining\n(confirmed outcomes)", fillcolor="#F3F3F3", color="#7F7F7F"];
+
+  review -> validate; history -> validate;
+  validate -> hist; validate -> feats;
+  hist -> model; feats -> model;
+  model -> queue; queue -> download;
+  queue -> analyst [label=" flagged first"];
+  analyst -> monitor [style=dashed, label=" outcomes"];
+  monitor -> model [style=dashed, label=" new version"];
+}

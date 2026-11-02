@@ -1,0 +1,34 @@
+{
+  "date": "2026-11-02",
+  "checks": [
+    {
+      "model": "Gradient Boosting",
+      "history_version": "strict-timestamp-groups-v3",
+      "features": 95,
+      "verified_demo_rows": 1000,
+      "verified_demo_flags": 23,
+      "model_sha256": "e0a1de1fc87ade51026d8d17dc3714c0e31cfc83f0316ccf888f5205f3c56381",
+      "status": "Copy, source, environment and prediction checks passed"
+    },
+    {
+      "model": "Random Forest",
+      "history_version": null,
+      "features": 78,
+      "verified_demo_rows": 1000,
+      "verified_demo_flags": 0,
+      "model_sha256": "e7a521f7182420dca15ac8f71d3edffd145cf256782986105a2ed411bad4555e",
+      "status": "Copy, source, environment and prediction checks passed"
+    },
+    {
+      "model": "Gradient Boosting",
+      "history_version": null,
+      "features": 78,
+      "verified_demo_rows": 1000,
+      "verified_demo_flags": 2,
+      "model_sha256": "262bca909632360cedef4abc88ce9dae6e795f402e668b81a9682e5306ee42bf",
+      "status": "Copy, source, environment and prediction checks passed"
+    }
+  ],
+  "retrained": false,
+  "test_2026_rerun": false
+}

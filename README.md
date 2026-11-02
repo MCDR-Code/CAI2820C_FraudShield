@@ -1,83 +1,90 @@
-# CAI2820C FraudShield
+# FraudShield course project
 
-Team A's Credit Card Fraud Detection and Risk Assessment System for CAI2820C.
-The project asks: **Which credit-card transactions should a fraud analyst
-review first?** It uses synthetic Sparkov transactions distributed by Kartik2112.
+One project, one Git repository. The authoritative Windows workspace is
+`G:\1MDC_Education\CAI2820C_Artificial_Intelligence_App\01_Assignments\CAI2820C_FraudShield`.
+Use this project for every phase and the final demo, not the old external copies.
 
-Team: Jorge Alvarez V, Mariela Del Rio, Javier Elizalde Ramirez and Juan Franceschi.
+## Folder map
 
-## Current final experiment
+| Folder | Purpose | Guide |
+|---|---|---|
+| Part_I | Initial problem and proposal | [Part I](Part_I/README.md) |
+| Part_II | Preparation, submitted report, notebook and exact sample audit | [Part II](Part_II/README.md) |
+| Part_III | Training, evaluation, final reports and phase references | [Part III](Part_III/README.md) |
+| Final_Demo | Application, launchers and final PowerPoint | [Run locally or remotely](Final_Demo/README.md) |
+| Shared | The same feature/scoring functions used by training and demo | [Shared runtime](Shared/README.md) |
+| Data | Original/corrected data, upstream generator and its environment; local only | [Inventory](References/Data_and_Models.md) |
+| Models | Frozen original/corrected models; local only | [Inventory](References/Data_and_Models.md) |
+| References | Cross-phase roadmap, source material and diagrams | [References](References/README.md) |
+| Tests | Automated checks with small fixtures | `python -m unittest discover -s Tests -v` |
+| Archive | Superseded working copies, ignored by Git | [Migration record](References/Reorganization.md) |
 
-The corrected October 31 experiment uses 6,293,357 development rows and a
-956,022-row 2026 test. Gradient Boosting with customer history achieved 95.33%
-precision and 86.42% recall (86 false alerts; 276 missed fraud). Earlier generated
-results were superseded after an upstream Sparkov sampler defect was found.
-See [current guide](Part_III_Modeling_Demo/README.md),
-[generator correction](Part_III_Modeling_Demo/Generator_Fix.md), and
-[submission forms](Docs_README.md). Code, notebooks and aggregate evidence
-are published; datasets and model binaries remain local. Missing personal
-reflections are identified in the forms. The planned remote demo is
-http://b2518067.eero.online:5100; its forwarding is off outside presentations.
+Each phase has its own Deliverables and References. Training belongs to Part III.
+The demo loads frozen models; it does not train. Shared, Data and Models have one
+authoritative home because they support multiple phases.
 
-## Project phases
+## Architecture
 
-| Folder | Purpose | Start here |
-| --- | --- | --- |
-| [Part II Data Preparation](Part_II_Data_Preparation/) | Reproduce the historical 324-card subset, inspect it, engineer features and prepare chronological training/validation/test inputs | [Pipeline and reproduction guide](Part_II_Data_Preparation/README.md) |
-| [Part III Modeling and Demo](Part_III_Modeling_Demo/) | Full-data model comparison, validation-only threshold selection, recorded final-test evaluation and local review dashboard | [Development and demo guide](Part_III_Modeling_Demo/README.md) |
+![Architecture](References/Diagrams/architecture.svg)
 
-Part II is a preparation checkpoint using the historical reduced sample. Part III
-uses the full original development population plus corrected generated years,
-while preserving fitting, validation and test roles. Do not substitute Part III results for the Part II report's counts
-or describe preparation as classifier training.
+## Experiment pipeline
 
-The completed Part II DOCX and its executed notebook are submitted directly to
-the instructor. The report links to this repository for supporting files. The
-DOCX is not duplicated here. Historical executed notebooks are preserved; the
-expanded training experiment has its own separate executed notebook.
+![Pipeline](References/Diagrams/pipeline.svg)
 
-## Data sources
+[Diagram explanations and editable Mermaid sources](References/Architecture_and_Pipeline.md)
 
-- [Kartik2112 Credit Card Transactions Fraud Detection dataset](https://www.kaggle.com/datasets/kartik2112/fraud-detection)
-- [Sparkov synthetic generator provenance](https://github.com/namebrandon/Sparkov_Data_Generation)
+## Corrected final experiment
 
-Download and extract `fraudTrain.csv` and `fraudTest.csv` manually. Put them in
-a local `data/` directory at this repository's root, or adjust the documented
-paths. The directory is ignored by Git and is not uploaded. Original sizes are
-1,296,675 development rows and 555,719 test rows, with 23 columns in each CSV.
-The code does not assume Kaggle API credentials or require `kaggle.json`.
-Use the published CSVs for historical Part II and the original-model checkpoint.
-The separate expanded-data experiment also uses newly generated transactions;
-follow the [current Phase III guide](Part_III_Modeling_Demo/README.md) for that run.
+Development: **6,293,357 rows**, comprising original January 2019-June 2020 training
+and corrected generated 2021-2025. Fitting uses **5,034,685** earlier rows; validation
+uses **1,258,672** later rows. Corrected 2026 test: **956,022 rows**, **2,032 fraud**.
 
-No original or reduced transaction CSVs, ZIPs, saved model binaries, caches,
-credentials, archive copies or duplicate notebook versions are committed.
-The small Part II selected-card CSV is an inclusion list, not transaction data.
-Part III result CSVs contain aggregate metrics only, not transaction records.
+| Frozen model on the same 2026 rows | Precision | Recall | F1 | Accuracy | False alerts | Missed fraud |
+|---|---:|---:|---:|---:|---:|---:|
+| Expanded Random Forest | 42.84% | 81.84% | 56.24% | 99.7293% | 2,219 | 369 |
+| Expanded transaction-only boosting | 47.54% | 83.32% | 60.54% | 99.7691% | 1,868 | 339 |
+| Boosting with 17 history features | 95.33% | 86.42% | 90.66% | 99.9621% | 86 | 276 |
 
-## Reproduction sequence
+Boosting uses scikit-learn HistGradientBoostingClassifier. The history threshold
+0.9609706329345121 was selected on validation. Read the
+[executed notebook](Part_III/Modeling/Team_A_Final_Evaluation_2026_ran.ipynb),
+[aggregate evidence](Part_III/Results/corrected_2026/) and
+[generator correction](Part_III/References/Generator_Fix.md).
 
-1. Obtain the original CSV pair from the dataset link above.
-2. Follow Part II's guide to recreate the exact historical subset using the
-   saved card IDs and audit. Run its notebook on the reconstructed pair.
-3. For development/demo work, use the full original pair and Part III's guide.
-   Train/preprocess on the earlier development period, choose the candidate
-   and threshold on later validation, then evaluate the saved approach.
-4. Start the local dashboard from saved artifacts generated on your computer.
+The earlier generated data had upstream sampler defects. Those metrics are
+historical, not final. Regeneration followed investigation of the earlier test,
+so the regenerated chronological test is not independent of the entire development
+history. Models and thresholds were frozen before corrected-test scoring.
+All data are synthetic; scores are uncalibrated and flags require human review.
+The original Kaggle-only RF result remains separate: 555,719 test rows, 68.93%
+precision and 75.10% recall.
 
-Part II reconstruction has been checked twice: the resulting new train/test
-files were identical across runs and matched the historical dataset content.
-Recorded library versions and methodological limitations are documented in
-each phase. Original data remains unchanged.
+## Run the demo
 
-## Historical original-model result and limitations
+Use Python 3.12 and install the environment from project root:
 
-Part III selected Random Forest on validation. The recorded reserved-test
-result was 68.93% precision and 75.10% recall; the preliminary 80% recall target
-was not met. These are synthetic historical data results, not evidence of
-production banking performance. Model scores are not calibrated fraud
-probabilities and flags require human review.
+```powershell
+python -m pip install -r requirements-tested.txt
+```
 
-The official test has now been observed. Do not tune against its outcomes and
-present a rerun on that same file as a new independent test. The later final
-report/presentation and teammate usability checks remain separate work.
+Double-click [START_DEMO_LOCAL.bat](Final_Demo/START_DEMO_LOCAL.bat) for
+http://127.0.0.1:8766. For the presentation, use
+[START_DEMO_REMOTE.bat](Final_Demo/START_DEMO_REMOTE.bat) and the existing
+external 5100 -> internal 5001 forwarding. Planned address:
+http://b2518067.eero.online:5100. Stop the TTS/STT demo before sharing that port.
+The launcher does not enable forwarding or change the firewall.
+[Full launch and preloading instructions](Final_Demo/README.md).
+
+Datasets and model binaries stay local; a Git clone alone cannot score transactions.
+See [Part III reconstruction](Part_III/README.md) for the trusted customer-file
+handoff and clean-workspace pipeline. Saved aggregate evidence remains readable
+without training or evaluation. The [final forms](Part_III/Deliverables/) still
+mark missing personal team reflections. Proposed monitoring and post-test
+look-back recovery are not implemented real-time detection capabilities.
+
+## Reorganization verification
+
+November 2: Git history was preserved; model binaries, thresholds and recorded
+2026 results did not change. All **52 software tests** and the three saved-model
+example checks passed. No project model was retrained and 2026 was not rerun.
+[Verification record](Part_III/Results/reorganization_verification.json).
