@@ -14,9 +14,10 @@ precision and 86.42% recall (86 false alerts; 276 missed fraud). Earlier generat
 results were superseded after an upstream Sparkov sampler defect was found.
 See [current guide](Part_III_Modeling_Demo/README.md),
 [generator correction](Part_III_Modeling_Demo/Generator_Fix.md), and
-[submission forms](docs/final_submission/). Code, notebooks and aggregate evidence
+[submission forms](Docs_README.md). Code, notebooks and aggregate evidence
 are published; datasets and model binaries remain local. Missing personal
-reflections and the remote presentation address are identified in the forms.
+reflections are identified in the forms. The planned remote demo is
+http://b2518067.eero.online:5100; its forwarding is off outside presentations.
 
 ## Project phases
 

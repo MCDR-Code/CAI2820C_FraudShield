@@ -35,3 +35,7 @@ data/
 !Part_III_Modeling_Demo/results/fixed_validation_comparison.csv
 !Part_III_Modeling_Demo/results/fixed_final_evaluation_summary.csv
 !docs/final_submission/*.docx
+
+# Submission forms are maintained at repository root.
+!Team_A_Final_Project_Model_Evaluation_Metrics.docx
+!Team_A_Final_Project_Solution_Design_Deployment_and_Reflection.docx

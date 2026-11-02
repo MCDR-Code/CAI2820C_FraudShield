@@ -107,8 +107,11 @@ an existing record. Read saved results rather than repeatedly tuning against tes
 not train. `run_notebook.py` preserves executed notebooks by refusing overwrites.
 
 For deliberate remote presentation, `START_DEMO_REMOTE.bat` listens on port 5001
-and requests an HTTP Basic password. External router mapping and the actual public
-address are configured separately by the presenter; none is supplied by this repo.
+and requests an HTTP Basic password. The planned address is http://b2518067.eero.online:5100, with external TCP 5100
+forwarded to internal TCP 5001 on the presentation computer. Forwarding is currently
+off and must be enabled and tested by the presenter. The TTS/STT demo shares this
+mapping, so stop that app before starting FraudShield; only one app can use port
+5001 at a time.
 The local address is not a remote demo link. Bind to localhost for ordinary use.
 
 ## Verification and submission status
@@ -119,8 +122,8 @@ python -m unittest discover -s tests -v
 
 Tests use small fixtures, not the final data. The completed-model evidence is
 preserved; testing does not retrain the project models or rerun 2026 evaluation.
-See [submission forms](../docs/final_submission/). Team-specific reflections and
-the remote presentation address still require human input. Proposed monitoring,
+See [submission forms](../Docs_README.md). Team-specific reflections still require human input; remote reachability
+requires a presentation-time check. Proposed monitoring,
 retraining and analyst outcome collection are not implemented prototype features.
 The retrospective look-back analysis measures delayed recovery, not immediate
 model detection; it is exploratory and requires later validation.
