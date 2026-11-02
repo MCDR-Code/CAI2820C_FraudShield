@@ -1,8 +1,10 @@
 """Local demo with separate models and browser-session history held only in RAM."""
 
+import base64
 import csv
 import io
 import json
+import os
 import secrets
 import time
 from threading import Lock
@@ -16,9 +18,29 @@ from core import ROOT, bundle_uses_history, load_bundle, required_columns, score
 from history import HISTORY_VERSION
 
 app = FastAPI(title='FraudShield', docs_url=None, redoc_url=None)
+
+# Remote presentation mode: set FRAUDSHIELD_PASSWORD to require a password on every request
+# (HTTP Basic auth, any user name). Unset = local-only use, no password, as before.
+DEMO_PASSWORD = os.environ.get('FRAUDSHIELD_PASSWORD') or None
+
+
+@app.middleware('http')
+async def require_password(request: Request, call_next):
+    if DEMO_PASSWORD is None:
+        return await call_next(request)
+    header = request.headers.get('authorization', '')
+    if header.startswith('Basic '):
+        try:
+            supplied = base64.b64decode(header[6:]).decode('utf-8').split(':', 1)[1]
+        except Exception:
+            supplied = ''
+        if secrets.compare_digest(supplied.encode(), DEMO_PASSWORD.encode()):
+            return await call_next(request)
+    return Response('Password required', status_code=401, headers={'WWW-Authenticate': 'Basic realm="FraudShield"'})
+
 app.mount('/static', StaticFiles(directory=ROOT / 'static'), name='static')
-MODEL_NAMES = {'baseline': 'Random Forest baseline', 'boosting': 'Gradient Boosting',
-               'history': 'Gradient Boosting + customer history'}
+MODEL_NAMES = {'baseline': 'Random Forest (comparison)', 'boosting': 'Gradient Boosting, transaction-only (comparison)',
+               'history': 'Gradient Boosting + customer history (final model)'}
 CONTEXT_TTL = 3600
 _bundle = None
 _bundles = {}
@@ -29,6 +51,11 @@ _lock = Lock()
 def artifact_dir(model):
     if model not in MODEL_NAMES:
         raise ValueError('Unknown model.')
+    # Final models trained on the corrected (fixed-sampler) data; see Generator_Fix.md.
+    expanded = ROOT / 'artifacts' / 'expanded_fixed_run1'
+    selected = expanded / {'history': 'history_v3', 'boosting': 'transaction_models', 'baseline': 'rf_baseline'}[model]
+    if (selected / 'selected_model.joblib').is_file():
+        return selected
     directory = ROOT / 'artifacts' / ('history_v3' if model == 'history' else model)
     if model == 'baseline' and not directory.exists():
         return ROOT / 'artifacts'
@@ -44,7 +71,7 @@ def bundle(model='baseline'):
             saved = load_bundle(artifact_dir(model) / 'selected_model.joblib')
             if model == 'history' and (saved['metadata'].get('history_version') != HISTORY_VERSION
                                        or saved['pipeline']['features'].history != 'precomputed'):
-                raise ValueError('History artifact is incompatible. Train the corrected history model first.')
+                raise ValueError('History artifact is incompatible. Install the verified history v3 artifact.')
             _bundles[model] = saved
         return _bundles[model]
 
@@ -84,13 +111,14 @@ def context_summary(context):
         return {'loaded': False}
     frame = context['frame']
     return {'loaded': True, 'source': context['source'], 'rows': len(frame),
+            'file_details': [{'id': item['id'], 'name': item['name'], 'rows': len(item['frame'])} for item in context.get('parts', [])],
             'files': context.get('files', []), 'duplicates_removed': context.get('duplicates_removed', 0),
             'cards': int(frame.cc_num.nunique()), 'cold_start': frame.empty,
             'start': None if frame.empty else str(frame.trans_date_trans_time.min()),
             'end': None if frame.empty else str(frame.trans_date_trans_time.max())}
 
 
-def save_context(request, response, frame, source, files=None, duplicates_removed=0):
+def save_context(request, response, frame, source, files=None, duplicates_removed=0, parts=None):
     # Replace this browser's context; never persist uploads or share another session's history.
     old = request.cookies.get('fraudshield_history')
     token = secrets.token_urlsafe(24)
@@ -101,7 +129,8 @@ def save_context(request, response, frame, source, files=None, duplicates_remove
             oldest = min(_contexts, key=lambda key: _contexts[key]['time'])
             del _contexts[oldest]
         context = {'frame': frame, 'source': source, 'time': time.monotonic(),
-                   'files': files or [], 'duplicates_removed': duplicates_removed}
+                   'files': files or [], 'duplicates_removed': duplicates_removed,
+                   'parts': parts or ([] if frame.empty else [{'id': secrets.token_urlsafe(12), 'name': source, 'frame': frame}])}
         _contexts[token] = context
     response.set_cookie('fraudshield_history', token, httponly=True, samesite='strict', max_age=CONTEXT_TTL)
     return context_summary(context)
@@ -170,7 +199,7 @@ def metadata(model: str = 'baseline'):
                 'features': saved['feature_count'], 'created': saved['created_utc'],
                 'data': saved['data'], 'limitations': saved['limitations'],
                 'validation': pd.read_csv(artifacts / 'validation_comparison.csv').to_dict('records'),
-                'final_test': json.loads(test.read_text()) if model == 'baseline' and test.exists() else None,
+                'final_test': json.loads(test.read_text()) if test.exists() else None,
                 'required_columns': required_columns(bundle_uses_history(bundle(model)))}
     except ERRORS as exc:
         return JSONResponse({'error': str(exc)}, status_code=503)
@@ -204,17 +233,22 @@ def context_status(request: Request):
 
 def combine_history(files, previous=None):
     """Combine a selected set; transaction IDs prevent double-counted history."""
-    parts, names = [], []
+    entries = list(previous.get('parts', [])) if previous else []
+    if previous and not entries and not previous['frame'].empty:
+        entries = [{'id': secrets.token_urlsafe(12), 'name': previous['source'], 'frame': previous['frame']}]
     columns = required_columns(True)
-    if previous is not None and not previous['frame'].empty:
-        parts.append(previous['frame'])
-        names.extend(previous.get('files') or [previous['source']])
     for upload_file in files:
         frame, name = read_upload(upload_file, history=True)
         validated = validate_input(frame, history=True)
         keep = columns + (['trans_num'] if 'trans_num' in validated else [])
-        parts.append(validated[keep])
-        names.append(name)
+        entries.append({'id': secrets.token_urlsafe(12), 'name': name, 'frame': validated[keep]})
+    return merge_history_parts(entries)
+
+
+def merge_history_parts(entries):
+    columns = required_columns(True)
+    parts = [item['frame'] for item in entries]
+    names = [item['name'] for item in entries]
     combined = pd.concat(parts, ignore_index=True)
     if 'trans_num' in combined and combined.trans_num.notna().all() and combined.trans_num.astype(str).str.strip().ne('').all():
         # Identical IDs with changed model inputs are conflicts, not duplicates.
@@ -227,7 +261,7 @@ def combine_history(files, previous=None):
     removed = sum(len(part) for part in parts) - len(combined)
     combined = combined.sort_values('trans_date_trans_time', kind='stable').reset_index(drop=True)
     keep = columns + (['trans_num'] if 'trans_num' in combined else [])
-    return combined[keep], ', '.join(names), names, removed
+    return combined[keep], ', '.join(names), names, removed, entries
 
 
 @app.post('/api/history/context')
@@ -239,13 +273,67 @@ def upload_context(request: Request, response: Response, file: list[UploadFile] 
         with _lock:
             _contexts.pop(previous, None)
     try:
-        frame, filename, names, removed = combine_history(file, previous_context)
-        return save_context(request, response, frame, filename, files=list(dict.fromkeys(names)), duplicates_removed=removed)
+        frame, filename, names, removed, parts = combine_history(file, previous_context)
+        return save_context(request, response, frame, filename, files=list(dict.fromkeys(names)), duplicates_removed=removed, parts=parts)
     except ERRORS as exc:
         return JSONResponse({'error': str(exc)}, status_code=400)
     finally:
         for upload_file in file:
             upload_file.file.close()
+
+
+# Only these known project files can be loaded from the server. No client paths.
+SERVER_HISTORY = {
+    str(year): ROOT / 'data' / ('synthetic_2021_fixed' if year == 2021 else 'synthetic_2022_2026_fixed') / f'transactions_{year}.csv'
+    for year in range(2021, 2026)
+}
+
+
+@app.post('/api/history/server-context')
+def server_context(request: Request, response: Response):
+    try:
+        entries = []
+        for year, path in SERVER_HISTORY.items():
+            # Read predictor/history fields and transaction IDs only, never labels.
+            columns = required_columns(True) + ['trans_num']
+            frame = pd.read_csv(path, dtype={'cc_num': 'string'}, usecols=columns)
+            frame = validate_input(frame, history=True)[columns]
+            entries.append({'id': secrets.token_urlsafe(12), 'name': path.name, 'frame': frame})
+        frame, source, names, removed, parts = merge_history_parts(entries)
+        return save_context(request, response, frame, source, files=names, duplicates_removed=removed, parts=parts)
+    except ERRORS as exc:
+        return JSONResponse({'error': str(exc)}, status_code=400)
+
+
+# Reserved 2026 test file, scored on the server so presenters need not upload 250 MB.
+SERVER_REVIEW = ROOT / 'data' / 'synthetic_2022_2026_fixed' / 'transactions_2026.csv'
+
+
+@app.post('/api/history/server-review')
+def server_review(request: Request):
+    try:
+        context = session_context(request)
+        if context is None:
+            raise ValueError('Load the server history 2021-2025 first.')
+        frame = pd.read_csv(SERVER_REVIEW, dtype={'cc_num': 'string'})
+        return analyze(frame, f'{SERVER_REVIEW.name} (server copy, {len(frame):,} transactions)', 'history', context['frame'])
+    except ERRORS as exc:
+        return JSONResponse({'error': str(exc)}, status_code=400)
+
+
+@app.delete('/api/history/files/{file_id}')
+def unload_history_file(file_id: str, request: Request, response: Response):
+    previous = session_context(request)
+    if previous is None:
+        return JSONResponse({'error': 'History session expired. Load history again.'}, status_code=400)
+    entries = previous.get('parts', [])
+    remaining = [item for item in entries if item['id'] != file_id]
+    if len(remaining) == len(entries):
+        return JSONResponse({'error': 'History file not found.'}, status_code=404)
+    if not remaining:
+        return clear_context(request, response)
+    frame, source, names, removed, parts = merge_history_parts(remaining)
+    return save_context(request, response, frame, source, files=names, duplicates_removed=removed, parts=parts)
 
 
 @app.delete('/api/history/context')

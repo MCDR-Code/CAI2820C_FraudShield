@@ -1,3 +1,23 @@
+# Share the corrected saved models
+
+The corrected v3 experiment is complete. The active folders are
+`artifacts/expanded_fixed_run1/rf_baseline`, `transaction_models`, and `history_v3`.
+Transfer only trusted team-generated artifacts, with their model_manifest.json,
+experiment.json, comparison, sample inputs and expected-score files. Do not upload
+model binaries or transaction datasets to GitHub. See the current README for data
+handoff prerequisites, frozen results and the clean-workspace reproduction sequence.
+
+Run `python check_model.py --artifacts artifacts/expanded_fixed_run1/history_v3`
+(and repeat for the two comparison folders) to check environment, sources, file
+hashes and example predictions before use. These sample checks do not rerun 2026.
+The fixed-pipeline customer source is the trusted saved 999-customer file. The
+original-data-only v3 experiment is not the corrected expanded experiment.
+
+## Historical original-data instructions
+
+The text below records the earlier original-data-only workflow. Its paths and
+training status are historical; do not use them for the final corrected demo.
+
 # Train history v3 and share it with the team
 
 PR #2 is incorporated on `phase-iii-history-context`. No full v3 model has been

@@ -1,6 +1,6 @@
 """Join original training plus 2021-2025; reserve 2026 for test.
 
-Creates fraudTrain.csv and fraudTest.csv under data/expanded_training_2021_2026.
+Creates fraudTrain.csv and fraudTest.csv under data/expanded_training_fixed.
 Uses the general join_csvs.py tool. Verifies generated source hashes.
 --replace-existing archives previous prepared outputs before publishing.
 No model is trained; original Kaggle data and original notebooks are unchanged.
@@ -49,9 +49,9 @@ def write_split(source, destination, report, years, filename):
 
 
 def combine(replace_existing=False):
-    source = ROOT / 'data/synthetic_2022_2026'
-    source_2021 = ROOT / 'data/synthetic_2021_full'
-    destination = ROOT / 'data/expanded_training_2021_2026'
+    source = ROOT / 'data/synthetic_2022_2026_fixed'
+    source_2021 = ROOT / 'data/synthetic_2021_fixed'
+    destination = ROOT / 'data/expanded_training_fixed'
     destination.mkdir(exist_ok=True)
     if (destination / 'fraudTrain.csv').exists() and not replace_existing:
         raise ValueError('Prepared files exist. Use --replace-existing to archive and rebuild them.')

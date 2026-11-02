@@ -1,3 +1,6 @@
+> HISTORICAL: the initial generated data had sampler defects. These results and
+> paths are superseded. Use Generator_Fix.md and the corrected experiment in README.md.
+
 # Expanded training results — October 27, 2026
 
 The notebook completed successfully in **28 minutes 45 seconds**, from 4:09:20
@@ -54,7 +57,7 @@ Transaction-only model SHA-256:
 Training CSV SHA-256:
 `fee5140205817b8e0980c9cd8b1bd016a9b331cee4ccbb6ebd2a7b4b14a0ace6`
 
-The demo still points at previously installed model folders. These new models
-have not silently replaced them. Keep models/thresholds frozen before the
+October 28 integration: the demo now selects these expanded folders directly for
+transaction-only boosting and history. The original Random Forest remains separate. Keep models/thresholds frozen before the
 separate 2026 test. Follow Training_and_Model_Sharing.md to transfer trusted
 artifacts, substituting the new paths above.

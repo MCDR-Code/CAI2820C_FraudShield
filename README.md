@@ -6,13 +6,17 @@ review first?** It uses synthetic Sparkov transactions distributed by Kartik2112
 
 Team: Jorge Alvarez V, Mariela Del Rio, Javier Elizalde Ramirez and Juan Franceschi.
 
-## Latest development update
+## Current final experiment
 
-On `phase-iii-history-context`, the [October 27 change summary](Part_III_Modeling_Demo/README.md#latest-changes)
-lists the model/history integration, demo improvements, CSV joining tool, and
-expanded training/test split. Expanded training completed in 28 minutes 45 seconds;
-see [results](Part_III_Modeling_Demo/Expanded_Training_Results.md). Dataset CSVs
-and model binaries remain local and excluded from GitHub.
+The corrected October 31 experiment uses 6,293,357 development rows and a
+956,022-row 2026 test. Gradient Boosting with customer history achieved 95.33%
+precision and 86.42% recall (86 false alerts; 276 missed fraud). Earlier generated
+results were superseded after an upstream Sparkov sampler defect was found.
+See [current guide](Part_III_Modeling_Demo/README.md),
+[generator correction](Part_III_Modeling_Demo/Generator_Fix.md), and
+[submission forms](docs/final_submission/). Code, notebooks and aggregate evidence
+are published; datasets and model binaries remain local. Missing personal
+reflections and the remote presentation address are identified in the forms.
 
 ## Project phases
 
@@ -22,8 +26,8 @@ and model binaries remain local and excluded from GitHub.
 | [Part III Modeling and Demo](Part_III_Modeling_Demo/) | Full-data model comparison, validation-only threshold selection, recorded final-test evaluation and local review dashboard | [Development and demo guide](Part_III_Modeling_Demo/README.md) |
 
 Part II is a preparation checkpoint using the historical reduced sample. Part III
-uses all original transactions/cards while preserving training, validation and
-test roles. Do not substitute Part III results for the Part II report's counts
+uses the full original development population plus corrected generated years,
+while preserving fitting, validation and test roles. Do not substitute Part III results for the Part II report's counts
 or describe preparation as classifier training.
 
 The completed Part II DOCX and its executed notebook are submitted directly to
@@ -43,7 +47,7 @@ paths. The directory is ignored by Git and is not uploaded. Original sizes are
 The code does not assume Kaggle API credentials or require `kaggle.json`.
 Use the published CSVs for historical Part II and the original-model checkpoint.
 The separate expanded-data experiment also uses newly generated transactions;
-follow [Expanded Training](Part_III_Modeling_Demo/Expanded_Training.md) for that run.
+follow the [current Phase III guide](Part_III_Modeling_Demo/README.md) for that run.
 
 No original or reduced transaction CSVs, ZIPs, saved model binaries, caches,
 credentials, archive copies or duplicate notebook versions are committed.
@@ -65,7 +69,7 @@ files were identical across runs and matched the historical dataset content.
 Recorded library versions and methodological limitations are documented in
 each phase. Original data remains unchanged.
 
-## Status and limitations
+## Historical original-model result and limitations
 
 Part III selected Random Forest on validation. The recorded reserved-test
 result was 68.93% precision and 75.10% recall; the preliminary 80% recall target

@@ -2,6 +2,7 @@ const $ = id => document.getElementById(id);
 const count = n => Number(n).toLocaleString('en-US');
 const pct = n => `${(100 * n).toFixed(2)}%`;
 let rows = [], busy = false, view = 'review', metadataRequest = 0;
+let reviewFile = null;
 const emptyBatch = () => ({data:null,error:'',status:'No batch loaded',flaggedOnly:false});
 const batches = {baseline:emptyBatch(),boosting:emptyBatch(),history:emptyBatch()};
 const batchKey = () => view === 'history' ? 'history' : $('review-model').value;
@@ -29,10 +30,10 @@ function displayBatch() {
   $('flagged-only').checked=state.flaggedOnly;
   $('status').textContent=state.status;
   $('error').textContent=state.error;$('error').hidden=!state.error;
-  $('total').textContent=data?count(data.total):'—';
-  $('flagged').textContent=data?count(data.flagged):'—';
-  $('amount').textContent=data?data.flagged_amount.toLocaleString('en-US',{style:'currency',currency:'USD'}):'—';
-  $('threshold').textContent=data?data.threshold.toFixed(4):'—';
+  $('total').textContent=data?count(data.total):'-';
+  $('flagged').textContent=data?count(data.flagged):'-';
+  $('amount').textContent=data?data.flagged_amount.toLocaleString('en-US',{style:'currency',currency:'USD'}):'-';
+  $('threshold').textContent=data?data.threshold.toFixed(4):'-';
   $('download').disabled=$('history-download').disabled=!rows.length;
   showEvaluation(data);render();
 }
@@ -53,13 +54,22 @@ function render() {
   $('shown').textContent=filtered.length ? `${count(Math.min(100,filtered.length))} of ${count(filtered.length)}` : '';
 }
 function showContext(data) {
-  $('history-status').textContent = !data.loaded ? 'No history loaded' : data.cold_start ? 'No prior history selected · cold start' : `${data.source} · ${count(data.rows)} transactions · ${count(data.cards)} cards · through ${data.end} UTC`+(data.duplicates_removed?` · ${count(data.duplicates_removed)} duplicate transactions removed`:'');
+  $('history-files').replaceChildren();
+  for(const file of data.file_details || []){
+    const row=document.createElement('div');row.className='history-file';
+    const label=document.createElement('span');label.textContent=`${file.name} - ${count(file.rows)} rows`;
+    const remove=document.createElement('button');remove.textContent='Unload';
+    remove.setAttribute('aria-label',`Unload ${file.name}`);
+    remove.onclick=()=>operation(`/api/history/files/${encodeURIComponent(file.id)}`,null,true,'DELETE');
+    row.append(label,remove);$('history-files').append(row);
+  }
+  $('history-status').textContent = !data.loaded ? 'No history loaded' : data.cold_start ? 'No prior history selected - cold start' : `${count((data.file_details || []).length)} history files - ${count(data.rows)} transactions - ${count(data.cards)} cards - through ${data.end} UTC`+(data.duplicates_removed?` - ${count(data.duplicates_removed)} duplicate transactions removed`:'');
 }
 async function operation(url,form,context=false,method='POST') {
   if(busy)return;
   const key=batchKey();
   if(!context)clearBatch();
-  busy=true;$('status').textContent=context?'Updating history…':'Scoring transactions…';
+  busy=true;$('status').textContent=context?'Updating history...':'Scoring transactions...';
   const controls=[...document.querySelectorAll('button,input[type=file],select')];
   const prior=controls.map(c=>c.disabled);controls.forEach(c=>c.disabled=true);
   try {
@@ -68,7 +78,7 @@ async function operation(url,form,context=false,method='POST') {
     if(context){showContext(data);batches.history=emptyBatch();displayBatch();}
     else {
       batches[key].data=data;batches[key].error='';
-      batches[key].status=data.source+(data.no_prior_history===undefined?'':` · ${count(data.no_prior_history)} transactions without prior card history`);
+      batches[key].status=data.source+(data.no_prior_history===undefined?'':` - ${count(data.no_prior_history)} transactions without prior card history`);
       displayBatch();
     }
   } catch(error) {
@@ -83,15 +93,35 @@ async function operation(url,form,context=false,method='POST') {
   }
 }
 function upload(id,url,context=false){$(id).onchange=()=>{if($(id).files.length){const form=new FormData();for(const file of $(id).files)form.append('file',file);operation(typeof url==='function'?url():url,form,context);}};}
-upload('upload',()=>`/api/analyze?model=${$('review-model').value}`);
+function scoreReviewFile(){
+  if(!reviewFile || busy)return;
+  const form=new FormData();form.append('file',reviewFile);
+  return operation(`/api/analyze?model=${$('review-model').value}`,form);
+}
+$('upload').onchange=()=>{
+  if(busy || !$('upload').files.length)return;
+  reviewFile=$('upload').files[0];
+  batches.baseline=emptyBatch();batches.boosting=emptyBatch();
+  scoreReviewFile();
+};
 upload('history-upload','/api/history/context?append=true',true);
 upload('history-review-upload','/api/analyze?model=history');
-$('sample').onclick=()=>operation(`/api/sample?model=${$('review-model').value}`);
+$('sample').onclick=()=>{
+  if(busy)return;
+  reviewFile=null;batches.baseline=emptyBatch();batches.boosting=emptyBatch();
+  operation(`/api/sample?model=${$('review-model').value}`);
+};
+$('history-server').onclick=()=>operation('/api/history/server-context',null,true);
 $('history-context-sample').onclick=()=>operation('/api/history/sample-context',null,true);
 $('cold-start').onclick=()=>operation('/api/history/cold-start',null,true);
 $('history-clear').onclick=()=>operation('/api/history/context',null,true,'DELETE');
 $('history-sample').onclick=()=>operation('/api/history/sample');
-$('clear').onclick=$('history-batch-clear').onclick=clearBatch;$('flagged-only').onchange=()=>{batches[batchKey()].flaggedOnly=$('flagged-only').checked;render();};
+$('history-server-review').onclick=()=>operation('/api/history/server-review');
+$('clear').onclick=()=>{
+  if(busy)return;
+  reviewFile=null;batches.baseline=emptyBatch();batches.boosting=emptyBatch();displayBatch();
+};
+$('history-batch-clear').onclick=clearBatch;$('flagged-only').onchange=()=>{batches[batchKey()].flaggedOnly=$('flagged-only').checked;render();};
 function download(){
   const columns=['row_number','transaction_time','category','amount_usd','model_score','review_flag',...(view==='history'?['prior_transactions','customer_status']:[]),...(batches[batchKey()].data?.evaluation?['actual_is_fraud','evaluation_result']:[])];
   const escape=value=>{let s=String(value);if(/^[=+@\-\t\r]/.test(s.trimStart()))s="'"+s;return '"'+s.replaceAll('"','""')+'"';};
@@ -116,17 +146,20 @@ async function loadMetadata(){
   try{
     const response=await fetch(`/api/metadata?model=${model}`),data=await response.json();if(request!==metadataRequest)return;
     if(!response.ok)throw new Error(data.error);
-    $('model-label').textContent=data.model+(model==='history'?' + customer history':'')+(model!=='baseline'?' · validation only':'');
+    $('model-label').textContent=data.model+(model==='history'?' + customer history':'')+(data.final_test?' - saved 2026 test available':' - validation only');
     $('training-size').textContent=`${count(data.data.training_rows)} training / ${count(data.data.validation_rows)} validation`;
     for(const id of ['comparison','test-results','run-record','limitations'])$(id).replaceChildren();
     for(const r of data.validation){const tr=document.createElement('tr');cell(tr,r.model);for(const k of ['precision','recall','f1','average_precision'])cell(tr,pct(r[k]),'number');cell(tr,count(r.fp),'number');$('comparison').appendChild(tr);}
     if(data.final_test){for(const [k,label]of[['precision','Precision'],['recall','Recall'],['f1','F1'],['average_precision','Average precision']])detail('test-results',label,pct(data.final_test[k]));detail('test-results','False alerts',count(data.final_test.fp));detail('test-results','Missed fraud',count(data.final_test.fn));detail('test-results','Preliminary targets',data.final_test.targets_met?'Met':'Not met');}
-    else detail('test-results','Status','Not evaluated for this model · validation only');
+    else detail('test-results','Status','Not evaluated for this model - validation only');
     detail('run-record','Features',data.features);detail('run-record','Threshold',data.threshold.toFixed(6));detail('run-record','Created',new Date(data.created).toLocaleString());
     for(const text of data.limitations){const li=document.createElement('li');li.textContent=text;$('limitations').appendChild(li);}
     document.querySelector('.chart-layout img').src=`/api/validation-pr.png?model=${model}`;
     document.querySelector('.chart-layout img').hidden=false;
   }catch(error){if(request!==metadataRequest)return;$('model-label').textContent='Model unavailable';$('model-error').textContent=error.message;$('model-error').hidden=false;}
 }
-$('review-model').onchange=()=>{displayBatch();loadMetadata();};$('evaluation-model').onchange=loadMetadata;
+$('review-model').onchange=()=>{
+  displayBatch();loadMetadata();
+  if(reviewFile && !batches[$('review-model').value].data)scoreReviewFile();
+};$('evaluation-model').onchange=loadMetadata;
 loadMetadata();

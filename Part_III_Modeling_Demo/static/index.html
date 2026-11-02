@@ -5,32 +5,34 @@
   <title>FraudShield | Team A</title><link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <header><div class="brand">FraudShield <span>Team A / CAI2820C</span></div><span class="environment">Synthetic data · Local prototype</span></header>
+  <header><div class="brand">FraudShield <span>Team A / CAI2820C</span></div><span class="environment">Synthetic data - Local prototype</span></header>
   <main>
     <div class="heading"><div><p class="eyebrow">TRANSACTION OPERATIONS</p><h1>Fraud review</h1></div><span id="model-label" class="model-label">Model unavailable</span></div>
     <nav aria-label="Views"><button id="review-tab" class="tab active" aria-selected="true">Batch review</button><button id="history-tab" class="tab" aria-selected="false">Customer history</button><button id="model-tab" class="tab" aria-selected="false">Model evaluation</button></nav>
     <section id="review-view">
-      <label class="model-choice" for="review-model">Transaction model <select id="review-model"><option value="baseline">Random Forest baseline</option><option value="boosting">Gradient Boosting · validation only</option></select></label>
+      <label class="model-choice" for="review-model">Transaction model <select id="review-model"><option value="baseline">Random Forest (comparison)</option><option value="boosting">Gradient Boosting, transaction-only (comparison)</option></select></label>
       <div class="toolbar"><label class="file-button" for="upload">Upload CSV<input id="upload" type="file" accept=".csv,text/csv"></label><button id="sample">Load demo sample</button><button id="clear">Clear</button><button id="download" disabled>Download results</button></div>
     </section>
     <section id="history-view" hidden>
-      <div class="evaluation-heading"><h2>Earlier history</h2><span class="experimental">Experimental · validation only</span></div>
-      <div class="toolbar"><label class="file-button" for="history-upload">Add history CSVs<input id="history-upload" type="file" accept=".csv,text/csv" multiple></label><button id="history-context-sample">Load example history</button><button id="cold-start">No prior history</button><button id="history-clear">Clear history</button></div>
+      <div class="evaluation-heading"><h2>Earlier history</h2><span class="experimental">Synthetic data - saved 2026 test available</span></div>
+      <div class="toolbar"><label class="file-button" for="history-upload">Add history CSVs<input id="history-upload" type="file" accept=".csv,text/csv" multiple></label><button id="history-server">Load server history 2021-2025</button><button id="history-context-sample">Load example history</button><button id="cold-start">No prior history</button><button id="history-clear">Clear history</button></div>
       <div id="history-status" role="status">No history loaded</div>
+      <div id="history-files" class="history-files" aria-label="Loaded history files"></div>
       <h2>Transactions to review</h2>
-      <div class="toolbar"><label class="file-button" for="history-review-upload">Upload review CSV<input id="history-review-upload" type="file" accept=".csv,text/csv"></label><button id="history-sample">Load example transactions</button><button id="history-batch-clear">Clear batch</button><button id="history-download" disabled>Download results</button></div>
+      <p class="note">For the reserved 2026 evaluation, first add transactions_2021.csv through transactions_2025.csv as earlier history. Then upload transactions_2026.csv here, or click Score server 2026 file. Only the review file is evaluated; history labels are not used. Keep the saved model and threshold fixed.</p>
+      <div class="toolbar"><label class="file-button" for="history-review-upload">Upload review CSV<input id="history-review-upload" type="file" accept=".csv,text/csv"></label><button id="history-server-review">Score server 2026 file</button><button id="history-sample">Load example transactions</button><button id="history-batch-clear">Clear batch</button><button id="history-download" disabled>Download results</button></div>
       <details><summary>CSV format and history</summary><p>History and review CSVs: trans_date_trans_time, dob, amt, city_pop, lat, long, merch_lat, merch_long, category, gender, state, cc_num, merchant.</p><p>Add history files one at a time or select several together. Each successful upload adds to the loaded history and updates the counts. Clear history to start over. Repeated transaction IDs are counted once; conflicting records are rejected and existing history is preserved. History must end before the review batch begins.</p><p>No fixed file-size or transaction-count limit. Large files take longer and use more memory. Uploaded history stays in this browser session's server memory for up to one hour; review batches do not update it automatically.</p></details>
     </section>
     <section id="batch-view">
       <div id="status" role="status" aria-live="polite">No batch loaded</div>
       <div id="error" role="alert" hidden></div>
-      <div class="metrics"><div><span>Transactions</span><strong id="total">—</strong></div><div><span>Review flags</span><strong id="flagged">—</strong></div><div><span>Flagged amount</span><strong id="amount">—</strong></div><div><span>Score threshold</span><strong id="threshold">—</strong></div></div>
+      <div class="metrics"><div><span>Transactions</span><strong id="total">-</strong></div><div><span>Review flags</span><strong id="flagged">-</strong></div><div><span>Flagged amount</span><strong id="amount">-</strong></div><div><span>Score threshold</span><strong id="threshold">-</strong></div></div>
       <section id="upload-evaluation" hidden aria-label="Uploaded-file evaluation">
         <h2>Results for this uploaded file</h2>
         <p id="evaluation-note" class="note"></p>
         <div id="evaluation-values" hidden>
-          <div class="metrics"><div><span>Precision · correct alerts</span><strong id="upload-precision">—</strong></div><div><span>Recall · fraud caught</span><strong id="upload-recall">—</strong></div><div><span>F1 score</span><strong id="upload-f1">—</strong></div><div><span>Accuracy</span><strong id="upload-accuracy">—</strong></div></div>
-          <div class="metrics"><div><span>Correct fraud alerts</span><strong id="upload-tp">—</strong></div><div><span>False alerts</span><strong id="upload-fp">—</strong></div><div><span>Missed fraud</span><strong id="upload-fn">—</strong></div><div><span>Correctly cleared</span><strong id="upload-tn">—</strong></div></div>
+          <div class="metrics"><div><span>Precision - correct alerts</span><strong id="upload-precision">-</strong></div><div><span>Recall - fraud caught</span><strong id="upload-recall">-</strong></div><div><span>F1 score</span><strong id="upload-f1">-</strong></div><div><span>Accuracy</span><strong id="upload-accuracy">-</strong></div></div>
+          <div class="metrics"><div><span>Correct fraud alerts</span><strong id="upload-tp">-</strong></div><div><span>False alerts</span><strong id="upload-fp">-</strong></div><div><span>Missed fraud</span><strong id="upload-fn">-</strong></div><div><span>Correctly cleared</span><strong id="upload-tn">-</strong></div></div>
         </div>
       </section>
       <div class="table-heading"><h2>Review queue</h2><label><input type="checkbox" id="flagged-only"> Flagged only</label><span id="shown"></span></div>
@@ -39,7 +41,7 @@
     </section>
     <section id="model-view" hidden>
       <div id="model-error" role="alert" hidden></div>
-      <label class="model-choice" for="evaluation-model">Saved experiment <select id="evaluation-model"><option value="baseline">Random Forest baseline · original final test</option><option value="boosting">Gradient Boosting · validation only</option><option value="history">Gradient Boosting + history · validation only</option></select></label>
+      <label class="model-choice" for="evaluation-model">Saved experiment <select id="evaluation-model"><option value="history">Gradient Boosting + history - final model</option><option value="baseline">Random Forest - comparison</option><option value="boosting">Gradient Boosting, transaction-only - comparison</option></select></label>
       <div class="evaluation-heading"><h2>Chronological validation</h2><span id="training-size"></span></div>
       <div class="table-scroll"><table><thead><tr><th>Model</th><th class="number">Precision</th><th class="number">Recall</th><th class="number">F1</th><th class="number">Average precision</th><th class="number">False alerts</th></tr></thead><tbody id="comparison"></tbody></table></div>
       <div class="chart-layout"><img src="/api/validation-pr.png" alt="Validation precision-recall curves for the two candidate models" loading="lazy"><div><h2>Reserved final test</h2><dl id="test-results"></dl><h2>Run record</h2><dl id="run-record"></dl></div></div>

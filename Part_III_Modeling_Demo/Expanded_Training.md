@@ -1,3 +1,6 @@
+> HISTORICAL: the initial generated data had sampler defects. These results and
+> paths are superseded. Use Generator_Fix.md and the corrected experiment in README.md.
+
 # Expanded training: separate from submitted work
 
 Original notebooks, original train/test files and saved models are unchanged.

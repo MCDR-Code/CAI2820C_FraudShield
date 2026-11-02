@@ -29,3 +29,9 @@ data/
 !*_ran.ipynb
 !Part_III_Modeling_Demo/Team_A_Expanded_Data_Model_Training.ipynb
 ~$*
+
+# Corrected final experiment: aggregate evidence and submission forms only.
+!Part_III_Modeling_Demo/Team_A_Final_Evaluation_2026.ipynb
+!Part_III_Modeling_Demo/results/fixed_validation_comparison.csv
+!Part_III_Modeling_Demo/results/fixed_final_evaluation_summary.csv
+!docs/final_submission/*.docx

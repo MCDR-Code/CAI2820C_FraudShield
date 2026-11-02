@@ -1,6 +1,6 @@
 """Generate a small, labeled Sparkov pilot across ALL 12 configured profiles.
 
-Uses upstream Sparkov transaction/fraud generation unchanged at a pinned commit.
+Uses pinned Sparkov with the documented independent-sampling correction.
 Creates new customers, with five per profile by default. Saves raw pipe-delimited
 outputs, reusable customer records, a compatible CSV, and earlier-history/review
 CSVs. Never trains or changes a model, or changes the original datasets.
@@ -37,9 +37,13 @@ def generate_profile(task):
     source, customer_file, name, start, end, destination, seed = task
     os.chdir(source)
     sys.path.insert(0, str(source))
+    if str(ROOT) not in sys.path:
+        sys.path.append(str(ROOT))  # sparkov_fixes lives beside this wrapper
     import numpy as np
     from faker import Faker
     import datagen_transaction as dt
+    import sparkov_fixes
+    sparkov_fixes.apply()  # correct upstream date/category coupling; see sparkov_fixes.py
     random.seed(seed)
     np.random.seed(seed)
     Faker.seed(seed)
@@ -162,10 +166,12 @@ def worker(args):
         'profiles': names, 'environment': {'python': platform.python_version(),
                                         'faker': faker.VERSION, 'numpy': np.__version__},
         'wrapper_sha256': digest(__file__),
+        'upstream_patch': {'module': 'sparkov_fixes.py', 'version': 'sparkov-independent-sampling-v1',
+                           'sha256': digest(ROOT / 'sparkov_fixes.py')},
         'upstream_sha256': {name: digest(source / name) for name in source_files},
         'customer_generation': 'Sparkov customer sampler with adult DOB sampling anchored to start date; equal customers per profile.',
         'notes': ['New customers, not a continuation of the original cardholders.',
-                  'Upstream transaction and fraud rules are unchanged; prevalence may differ greatly from Kaggle.',
+                  'Profile weights and fraud scheduling are retained; sparkov_fixes.py corrects sampling and category-specific amounts. Prevalence may differ from Kaggle.',
                   'Uniform profile coverage is a scenario design, not population weighting.'],
     }
     if reuse:

@@ -24,7 +24,9 @@ def evaluate(artifacts=ROOT / 'artifacts', data_dir=None, acknowledge_observed_t
         raise ValueError('Final test has already been evaluated. Read the saved results instead of rerunning.')
     bundle = load_bundle(artifacts / 'selected_model.joblib')
     locked = bundle['metadata']
-    if (locked.get('history_features') or locked['selected_model'] == 'Gradient Boosting') and not acknowledge_observed_test:
+    # The original Kaggle test was already observed; expanded experiments use their own reserved test file.
+    original_test = locked.get('data', {}).get('dataset_mode', 'original') != 'expanded'
+    if original_test and (locked.get('history_features') or locked['selected_model'] == 'Gradient Boosting') and not acknowledge_observed_test:
         raise ValueError('This project already observed the official test. New candidates are validation-only. '
                          'A deliberate retrospective rerun requires --acknowledge-observed-test and is not an independent holdout.')
     if locked.get('history_features') and locked.get('history_version') != HISTORY_VERSION:
@@ -64,6 +66,9 @@ def evaluate(artifacts=ROOT / 'artifacts', data_dir=None, acknowledge_observed_t
     with output.open('x', encoding='utf-8') as stream:
         json.dump(result, stream, indent=2)
     prediction = scores >= bundle['threshold']
+    # Row-level scores for error analysis: 1-based CSV row number, score and flag only (no identities/labels).
+    pd.DataFrame({'row_number': np.arange(1, len(test) + 1), 'model_score': scores,
+                  'review_flag': prediction}).to_csv(artifacts / 'test_scores.csv', index=False)
     fig, ax = plt.subplots(figsize=(5, 4))
     ConfusionMatrixDisplay(confusion_matrix(test[TARGET], prediction, labels=[0, 1]),
                            display_labels=['Legitimate', 'Fraud']).plot(ax=ax, colorbar=False, values_format=',d', cmap='Greens')

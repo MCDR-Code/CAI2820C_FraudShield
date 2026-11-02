@@ -1,240 +1,132 @@
-# Part III model development and local demo
+# FraudShield model development and demo
 
-## Latest changes
+## Corrected final experiment
 
-**October 27, 2026 — `phase-iii-history-context`**
+The October 31 experiment replaces the initial generated-data experiment, which
+had upstream Sparkov sampling defects. See [Generator Fix](Generator_Fix.md).
+All results below use the corrected data. The original Kaggle-only experiment
+and the Phase II preparation checkpoint remain separate historical evidence.
 
-**Expanded training completed:** the executed notebook finished in **28 minutes
-45 seconds**, including loading, feature construction, fitting and verification.
-On 1,265,132 validation transactions, expanded Gradient Boosting with history
-achieved **95.87% precision, 90.12% recall, 88 false alerts and 224 missed fraud**.
-The 2026 test labels remain unused. New artifacts are saved separately and have
-not been installed over the demo models. See [expanded training results](Expanded_Training_Results.md).
+Development: **6,293,357 transactions** (original January 2019-June 2020 training
+plus corrected generated 2021-2025). Chronological fitting uses 5,034,685 rows,
+ending November 9, 2024; validation uses 1,258,672 later rows through December 2025.
+Equal timestamps stay together. The original Kaggle test is excluded.
+Corrected 2026 test: **956,022 rows**, including **2,032 fraud cases**.
 
-- **Model/history integration:** PR #2 adds Juan's nine additional history
-  features, giving 17 history features and 95 total on the original full dataset.
-  All history uses strictly earlier timestamps; simultaneous purchases cannot
-  influence each other. Error-analysis and model-sharing checks are included.
-- **History uploads:** add CSVs sequentially or select several together; counts
-  update after each addition. Duplicate transaction IDs count once, conflicting
-  records are rejected, and failed additions preserve existing history.
-- **Large files:** fixed review/history row and byte caps are removed. Available
-  memory and processing time still govern practical sizes.
-- **Upload evaluation:** optional `is_fraud` labels produce precision, recall,
-  F1, accuracy, correct/false alerts, missed fraud and correctly cleared counts.
-  The queue/download shows actual labels and outcomes. Labels never determine
-  predictions; these metrics describe this upload, not the old validation run.
-- **Tab/model switching:** each batch's results, metrics and filters are retained
-  when switching views or transaction models, for the lifetime of the page.
-- **Data and joining:** [join_csvs.py](join_csvs.py) joins selected CSVs with one
-  header, preserves card IDs as text and handles the original export-index
-  column. Full 2021 data is complete for the same 999 generated customers.
-  [prepare_expanded_training.py](prepare_expanded_training.py) prepares the
-  project's combined data under `data/expanded_training_2021_2026`.
-- **Training/test split:** `fraudTrain.csv` contains **6,325,651** rows: original
-  January 2019–June 2020 training data plus generated 2021–2025. `fraudTest.csv`
-  contains **960,579** generated 2026 rows and is excluded from fitting/validation.
-- **Separate notebook:** [expanded training notebook](Team_A_Expanded_Data_Model_Training.ipynb)
-  offers Logistic Regression, Random Forest and Gradient Boosting, plus the v3
-  history experiment. It saves new artifacts separately. **Expanded training is
-  complete**; the demo still uses previously installed models
-  where available. The original Random Forest and submitted work are preserved.
+| Frozen model | Precision | Recall | F1 | Accuracy | False alerts | Missed fraud |
+|---|---:|---:|---:|---:|---:|---:|
+| Expanded Random Forest | 42.84% | 81.84% | 56.24% | 99.7293% | 2,219 | 369 |
+| Expanded transaction-only Gradient Boosting | 47.54% | 83.32% | 60.54% | 99.7691% | 1,868 | 339 |
+| Gradient Boosting with 17 history features | 95.33% | 86.42% | 90.66% | 99.9621% | 86 | 276 |
 
-Only code, notebook, instructions and aggregate evidence are shared. Dataset CSVs
-remain local. See [Expanded Training](Expanded_Training.md) for exact commands and
-file locations, and [Training and Model Sharing](Training_and_Model_Sharing.md)
-for saved-model transfer. `main` and the Phase II submission remain unchanged.
+Gradient Boosting is scikit-learn HistGradientBoostingClassifier. Thresholds were
+chosen on validation only: maximum F1 meeting recall >= 0.80 and precision >= 0.10
+where feasible. No refit on validation. The history model has 95 transformed features;
+transaction-only models have 78. Its saved threshold is 0.9609706329345121.
+The corrected test was scored after all models were saved. However, regeneration
+followed investigation of the earlier defective test; disclose that development
+history rather than claiming a pristine independent study.
 
-## Experiment context
+Read [executed final evaluation](Team_A_Final_Evaluation_2026_ran.ipynb),
+[aggregate comparison](results/fixed_final_evaluation_summary.csv), and
+[corrected evidence](results/corrected_2026/). Saved evidence can be read without
+models or datasets. Scores are not calibrated probabilities; flags require human
+review. These synthetic-data results do not establish real-bank performance.
 
-Part II is an unchanged preparation checkpoint. The original experiment uses the full original
-Sparkov train/test pair, with no card reduction. Juan Franceschi contributed the
-history-feature and Gradient Boosting proposal in PR #1. The integration retains
-those ideas with strictly earlier timestamp groups and explicit scoring context.
+## Start the demo
 
-**October 27 update:** PR #2 is incorporated into `phase-iii-history-context`.
-History v3 has 17 history features (95 total here). It has now been trained on
-the expanded data; see the separate results above. An original-data-only v3 run
-has not been performed. The v2 model/results remain historical evidence.
-Follow [Training and Model Sharing](Training_and_Model_Sharing.md), using the new
-artifact paths in the results report, for Mac handoff. `main` and Phase II remain unchanged.
-
-[Synthetic Pilot](Synthetic_Pilot.md) documents the separate January 2021
-experiment: 60 new customers across all 12 Sparkov profiles, 4,597 generated
-transactions, and paired earlier-history/review CSVs. Generated data stays local;
-the original data and trained models are unchanged.
-
-[Full Synthetic Data 2022–2026](Synthetic_Data_2022_2026.md) describes the separate
-five-year generation for 999 new customers, matching the original dataset's
-actual distinct-card count, with one compatible labeled CSV per year.
-
-[Expanded Training](Expanded_Training.md) describes the separate combined
-training file and copied unexecuted notebook, with all three training algorithms.
-The active data folder is `data/expanded_training_2021_2026`: original training
-plus new 2021–2025 rows in `fraudTrain.csv`, with 2026 reserved in `fraudTest.csv`.
-The general joining command is [join_csvs.py](join_csvs.py).
-The combined training data starts in 2019 (original January 2019–June 2020 plus
-generated 2021–2025), despite the folder name. It contains 6,325,651 transactions;
-the separate 2026 test contains 960,579. These dataset CSVs are local only and
-excluded from GitHub. The new notebook has completed training; its executed copy
-and [results](Expanded_Training_Results.md) document the run.
-
-## Saved models and results
-
-| Experiment | Validation precision | Validation recall | Validation F1 | Official test |
-| --- | ---: | ---: | ---: | --- |
-| Original Random Forest | 73.10% | 80.04% | 0.76412 | Previously measured: 68.93% precision, 75.10% recall |
-| Gradient Boosting | 87.72% | 81.73% | 0.84618 | Not evaluated |
-| Corrected Gradient Boosting + 8 history features (v2 record) | 90.85% | 85.24% | 0.87957 | Not evaluated |
-| Original-data-only + 17 history features (v3) | Not run | Not run | Not run | Not evaluated |
-
-These are validation comparisons, not new independent holdout results. The
-official test was already observed in the original project. Do not tune against
-it or present a later retrospective evaluation as unseen. The original baseline
-missed its 80% final-test recall target. Scores are not calibrated probabilities;
-review flags are not confirmed fraud. Synthetic results are not banking evidence.
-
-## Obtain the original data
-
-Download `fraudTrain.csv` and `fraudTest.csv` from
-[Kartik2112's dataset](https://www.kaggle.com/datasets/kartik2112/fraud-detection).
-Generator provenance: [Sparkov](https://github.com/namebrandon/Sparkov_Data_Generation).
-Extract both original CSVs into the ignored repository-root `data/` directory.
-No Kaggle API credentials are assumed. Do not combine train and test or use the
-Part II reduced pair for these experiments.
-
-## Reproduce locally
-
-Use Python 3.12. From this phase folder, with sufficient RAM:
+Use Python 3.12 and the recorded environment:
 
 ```powershell
 python -m pip install -r requirements-tested.txt
-python train.py --data-dir ../data --output-dir artifacts/baseline
-python train.py --data-dir ../data --output-dir artifacts/boosting --models "Gradient Boosting"
-python train.py --data-dir ../data --output-dir artifacts/history_v3 --history --models "Gradient Boosting"
-python verify_context.py --data-dir ../data --artifacts artifacts/history_v3
-python analyze_errors.py --data-dir ../data --artifacts artifacts/history_v3
-python check_model.py --artifacts artifacts/history_v3
-python -m unittest discover -s tests -v
 python -m uvicorn app:app --host 127.0.0.1 --port 8766
 ```
 
-Open http://127.0.0.1:8766. Saved models are loaded, not retrained, by the demo.
-Training refuses nonempty experiment directories. Use another NEW directory for
-a deliberate experiment, not an overwrite of recorded artifacts. The original
-baseline's published aggregate results are in `results/`; a new baseline fit
-does not automatically recreate its recorded final-test artifact.
+Open http://127.0.0.1:8766. Install trusted local model folders under
+`artifacts/expanded_fixed_run1/{rf_baseline,transaction_models,history_v3}`.
+The original Kaggle Random Forest is preserved separately in `artifacts/baseline`.
+Only trusted joblib files should be loaded. Datasets and model binaries are not on GitHub.
 
-The executed notebook currently preserves the October 22 v2 run and embedded
-v2 source. It is historical evidence, NOT the executable v3 training workflow.
-Do not use its Run All to train v3. Use the commands above until we refresh its
-source and measured outputs after the new training run. It never evaluated the
-new models on official test labels.
+- **Batch review:** selects expanded Random Forest or expanded transaction-only
+  boosting. Switching models reuses the uploaded file and caches each result.
+- **Customer history:** always uses expanded boosting with history. Load server
+  history 2021-2025, or add CSVs yourself. Each file has an Unload button; overlapping
+  transactions remain while another loaded file contains them. Then upload the
+  corrected 2026 review file, or use the server-review control.
+- **Model evaluation:** displays the selected saved experiment's validation and
+  recorded 2026 test. Uploaded-file metrics describe that upload separately.
 
-`evaluate.py` remains a separate deliberate tool. New GB/history candidates
-require `--acknowledge-observed-test` for a retrospective evaluation. That
-acknowledgment does not make the old test independent. No such evaluation was
-performed for this integration.
+Server history uses `data/synthetic_2021_fixed/transactions_2021.csv` and
+`data/synthetic_2022_2026_fixed/transactions_2022.csv` through 2025. Corrected review
+is `data/synthetic_2022_2026_fixed/transactions_2026.csv`; an identical copy is
+`data/expanded_training_fixed/fraudTest.csv`. Never use 2026 as earlier context
+for the full-year 2026 review. History must end strictly before the review starts.
 
-## Demo workflow
+History includes only strictly earlier timestamps on the same card, including
+earlier review rows. Simultaneous transactions cannot affect each other. Labels
+and numeric card identities are not predictors. Review uploads do not automatically
+append to history. Add the earlier review file as context before a later batch.
+History remains in server memory for one hour per browser session; at most four
+sessions are retained. Large files consume memory and processing time. No fixed
+row or byte cap is imposed. Original/generated customers are different populations.
 
-- **Batch review:** Choose the original Random Forest or transaction-only
-  Gradient Boosting. Upload a compatible CSV or load that model's sample.
-- **Customer history:** Load earlier history first, then a separate review CSV.
-  The example buttons load a matched pseudonymous history/review pair. An
-  explicit No prior history option supports a disclosed cold start. The example
-  contains a few whole card histories and is not a representative performance
-  sample.
-- **Model evaluation:** Choose a saved experiment. Validation tables, chart,
-  threshold and limitations belong to that selected model. Only the preserved
-  original baseline has the previously recorded final-test results.
+Downloads omit names, addresses, birth dates and card IDs, and escape spreadsheet
+formulas. Optional 0/1 labels produce upload metrics after scoring. Failed history
+additions preserve existing history. The browser shows 100 queue rows; downloads
+include all scored rows. There is no implemented case-management or monitoring system.
 
-History must end strictly before the first review transaction. Overlapping files
-are rejected rather than double-counted. Within review batches, a transaction
-sees earlier review transactions on its card, never later ones or same-time
-transactions. Splitting a review stream into separate batches requires including
-earlier reviewed transactions in the next context file if their history should
-carry forward. Scoring does NOT automatically append transactions to context.
+## Reproduction and trusted handoff
 
-## Features and same-time behavior
+1. Download the original pair from
+   [Kartik2112](https://www.kaggle.com/datasets/kartik2112/fraud-detection)
+   into `../../01_Assignments/fraud` relative to this folder.
+2. Set up the isolated generator environment using `requirements-sparkov.txt`.
+   Clone [Sparkov](https://github.com/namebrandon/Sparkov_Data_Generation) into
+   `data/Sparkov_Data_Generation` at commit
+   `b5eb45c89d36f2aa4ef16044a42945bed8b96d93`.
+3. Obtain the saved 999-customer `customers.psv` from a trusted teammate. Its checksum
+   is recorded in the generation evidence. The local corrected data folder retains it.
+   The file is deliberately excluded from GitHub. Exact regeneration requires this
+   population; generating new customers creates a different experiment.
+4. In a clean workspace with no completed fixed-output folders, run:
 
-The history model adds eight features: prior count, amount/prior-mean ratio,
-amount/prior-maximum ratio, capped log time since previous timestamp, prior
-24-hour count, new merchant, new category, and distance from the previous
-timestamp's merchant location. For several merchants at the previous timestamp,
-distance uses their centroid; this deterministic convention is documented and
-tested. All features exclude current-time peers. Card IDs connect histories;
-their numerical values and fraud labels never become predictors.
+```powershell
+powershell -ExecutionPolicy Bypass -File run_fixed_pipeline.ps1 -CustomersFile "C:\trusted-handoff\customers.psv"
+```
 
-Unseen cards are shown as No prior history. Cold-start performance is not claimed
-to match the contextual validation table. Validation uses the earlier training
-period as context and the later development period as the review batch. The
-same `history_with_context` function and saved precomputed-feature pipeline are
-used by inference. `verify_context.py` measured zero score difference on all
-259,335 validation rows for v2. Run it again for v3 after retraining; no new
-parity result is claimed until then.
+The script creates `data/synthetic_2021_fixed`, `data/synthetic_2022_2026_fixed`,
+`data/expanded_training_fixed`, and `artifacts/expanded_fixed_run1`, then executes
+`Team_A_Final_Evaluation_2026.ipynb`. It refuses to overwrite completed runs.
+The sampler patch is recorded in generation manifests; profile weights and fraud
+scheduling are retained, while random-number consumption and realized counts change.
 
-## Upload schema and safety
+Use `python check_model.py --artifacts artifacts/expanded_fixed_run1/history_v3`
+for trusted artifact checks. `evaluate.py` writes a test record once and refuses
+an existing record. Read saved results rather than repeatedly tuning against test.
+`prepare_expanded_training.py` rebuilds the corrected combined data only; it does
+not train. `run_notebook.py` preserves executed notebooks by refusing overwrites.
 
-Transaction-only inputs require `trans_date_trans_time`, `dob`, `amt`, `city_pop`,
-`lat`, `long`, `merch_lat`, `merch_long`, `category`, `gender`, `state`. History
-and history-review inputs additionally require `cc_num` and `merchant`.
-Card IDs are imported as text. Timestamp normalization has second resolution.
-Invalid dates, blank values, nonfinite numbers, bad coordinates, nonpositive
-amounts, negative population and ages outside 0-120 are rejected.
+For deliberate remote presentation, `START_DEMO_REMOTE.bat` listens on port 5001
+and requests an HTTP Basic password. External router mapping and the actual public
+address are configured separately by the presenter; none is supplied by this repo.
+The local address is not a remote demo link. Bind to localhost for ordinary use.
 
-History and review uploads have no fixed byte or transaction-count limit.
-CSV parsing reads directly from the spooled upload, avoiding full-file byte and
-decoded-text copies. Available memory and processing time still determine the
-practical file size. The browser shows the first 100 matching results; the full
-scored result is available in the download. History supports sequential additions
-or selecting several CSVs together. Updated counts follow each upload. Repeated
-transaction IDs count once; conflicts are rejected. Failed additions preserve
-existing history; Clear history starts over. Review accepts one CSV at a time.
+## Verification and submission status
 
-Context is browser-session-scoped, stored only in local server RAM, expires
-after one hour, and is explicitly clearable. At most four sessions are retained;
-the oldest is evicted when another is added. Invalid legacy replacement clears
-the previous context; invalid browser additions preserve it. Review errors never substitute demo results. Downloads
-omit names, addresses, birth dates and card IDs and escape spreadsheet formula
-text. When the review CSV supplies `is_fraud`, downloads include the actual
-label and evaluation outcome. Uploads are not persisted by the application.
+```powershell
+python -m unittest discover -s tests -v
+```
 
-The upload screen evaluates this file's predictions against optional `is_fraud`
-labels AFTER scoring. Labels must be 0/1 on every row when supplied; missing or
-invalid labels are rejected rather than reported as a partial evaluation.
-Precision, recall, F1, accuracy and all four confusion counts are shown, with
-undefined measures displayed as N/A. Row labels are aligned using original row
-numbers after score sorting. Unlabeled files still score normally, with a clear
-message that correctness cannot be measured. This is separate from the saved
-validation/test records under Model evaluation, and does not train the model.
+Tests use small fixtures, not the final data. The completed-model evidence is
+preserved; testing does not retrain the project models or rerun 2026 evaluation.
+See [submission forms](../docs/final_submission/). Team-specific reflections and
+the remote presentation address still require human input. Proposed monitoring,
+retraining and analyst outcome collection are not implemented prototype features.
+The retrospective look-back analysis measures delayed recovery, not immediate
+model detection; it is exploratory and requires later validation.
 
-Browser result state is separate for Random Forest, Gradient Boosting and the
-history view. Switching tabs/models restores each batch, metrics, error and
-filter state. Clear affects only the current batch; a successful history change
-invalidates only the history review batch. State lasts for this page session,
-not a page refresh or server restart. Backend history expiry still applies.
-
-No original/reduced/demo transaction files, context files, binaries, ZIPs or
-credentials are committed. Local generated files stay under ignored `artifacts/`.
-Use only locally generated trusted joblib files and bind the server to localhost.
-This is a classroom prototype, not an authenticated production banking service.
-
-## Evidence and code
-
-- `results/`: original baseline evidence, new validation-only experiment records,
-  corrected context parity report and comparison table.
-- `Team_A_Model_Development_and_Demo_ran.ipynb`: historical v2 executed notebook;
-  refresh after v3 training rather than reuse its old numbers.
-- `train.py`, `history.py`, `core.py`, `verify_context.py`: development and shared
-  inference logic. `shared/project_data.py` retains Part II feature functions.
-- `tests/`: input/privacy checks, threshold logic, strictly earlier history,
-  same-time/order handling, context parity, cold starts and session isolation.
-- `History_Integration_Results.md`: provenance, changes and measured limitations.
-- `analyze_errors.py`: validation error breakdown with model-version, source
-  fingerprint, metadata and split checks. `tune.py` and `--gb-params` remain
-  optional; new v3 training keeps the untuned settings by default.
-- `model_sharing.py` / `check_model.py`: file/source checksums, environment checks
-  and matching example predictions for trusted team-generated models.
-
-The Phase II report/notebook are not changed by these Phase III improvements.
+Earlier notebooks and result files are historical. In particular,
+`Expanded_Training_Results.md`, `Expanded_Training.md`, `Synthetic_Data_2022_2026.md`,
+and `results/expanded_training_2025_validation.json` describe the defective initial
+generation and must not supply final submission metrics. The obsolete bulky data,
+models and browser exports were relocated outside the repository on November 1.

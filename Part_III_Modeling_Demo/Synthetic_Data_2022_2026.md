@@ -1,3 +1,6 @@
+> HISTORICAL: the initial generated data had sampler defects. These results and
+> paths are superseded. Use Generator_Fix.md and the corrected experiment in README.md.
+
 # New Sparkov dataset, January 2022–December 2026
 
 The requested full generation is separate from the one-month pilot and the
