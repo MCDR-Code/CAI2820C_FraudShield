@@ -15,6 +15,8 @@ with 95.33% precision, 86.42% recall, 86 false alerts and 276 misses on 956,022 
 Modeling/Team_A_Final_Evaluation_2026.ipynb is the unexecuted reconstruction source.
 Existing saved evaluation records are read instead of repeating a test.
 
+On the corrected 2026 test set (956,022 transactions, 2,032 fraud), adding 17 strictly earlier per-card history features to the boosting model raised precision from 47.54% to 95.33% (+47.8 points) and recall from 83.32% to 86.42% (+3.1 points). F1 rose from 60.54% to 90.66%. False alerts fell from 1,868 to 86 (a 95.4% reduction), and missed fraud fell from 339 to 276 (63 fewer, an 18.6% reduction). Both models use the same model family and the same rows. The gain is therefore attributable to the history features, though the history model’s threshold (0.961) was tuned separately on validation. These results come from synthetic Sparkov data in which fraud is generated in a one-day window, so the history features may partly exploit that generator pattern. They should not be read as expected real-world performance. The corrected test is also not fully independent, because regeneration followed our analysis of an earlier defective test.
+
 All commands below run from repository root. Use Python 3.12:
 
 ```powershell
