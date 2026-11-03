@@ -51,6 +51,8 @@ Boosting uses scikit-learn HistGradientBoostingClassifier. The history threshold
 [aggregate evidence](Part_III/Results/corrected_2026/) and
 [generator correction](Part_III/References/Generator_Fix.md).
 
+Adding the 17 strictly earlier per-card history features raised precision from 47.54% to 95.33% and recall from 83.32% to 86.42%. False alerts fell from 1,868 to 86, and missed fraud fell from 339 to 276. Fraud in the Sparkov generator is created in a one-day window, so the history features may partly exploit that pattern, and these gains should not be read as real-world performance.
+
 The earlier generated data had upstream sampler defects. Those metrics are
 historical, not final. Regeneration followed investigation of the earlier test,
 so the regenerated chronological test is not independent of the entire development
