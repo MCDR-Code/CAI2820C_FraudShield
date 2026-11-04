@@ -19,7 +19,7 @@ from threading import Lock
 
 import pandas as pd
 from fastapi import FastAPI, File, Request, Response, UploadFile
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from core import ROOT, bundle_uses_history, load_bundle, required_columns, score_transactions, validate_input
@@ -27,24 +27,49 @@ from history import HISTORY_VERSION
 
 app = FastAPI(title='FraudShield', docs_url=None, redoc_url=None)
 
-# Remote presentation mode: set FRAUDSHIELD_PASSWORD to require a password on every request
-# (HTTP Basic auth, any user name). Unset = local-only use, no password, as before.
+# Remote presentation mode (Start-Demo-Remote.ps1): FRAUDSHIELD_ACCESS_KEY is set for this run and
+# the printed link / QR code carries it as ?key=...; the browser then keeps it in a cookie.
+# FRAUDSHIELD_PASSWORD (HTTP Basic, any user name) is still accepted. Neither set = local use, no key.
+DEMO_KEY = os.environ.get('FRAUDSHIELD_ACCESS_KEY') or None
 DEMO_PASSWORD = os.environ.get('FRAUDSHIELD_PASSWORD') or None
+KEY_COOKIE = 'fraudshield_key'
+LOCKED_PAGE = ("<!doctype html><meta name=viewport content='width=device-width,initial-scale=1'>"
+               "<title>FraudShield</title><body style='font:17px system-ui;padding:32px;color:#183044'>"
+               "<h1>FraudShield</h1><p>This demo needs its access key.</p>"
+               "<p>Open the link that <b>Start-Demo-Remote.ps1</b> printed on the host computer, or scan its QR code.</p>")
+
+
+def _matches(supplied, secret):
+    return bool(supplied) and secrets.compare_digest(supplied.encode(), secret.encode())
 
 
 @app.middleware('http')
-async def require_password(request: Request, call_next):
-    if DEMO_PASSWORD is None:
+async def require_access(request: Request, call_next):
+    if (DEMO_KEY is None and DEMO_PASSWORD is None) or request.url.path == '/health':
         return await call_next(request)
-    header = request.headers.get('authorization', '')
-    if header.startswith('Basic '):
-        try:
-            supplied = base64.b64decode(header[6:]).decode('utf-8').split(':', 1)[1]
-        except Exception:
-            supplied = ''
-        if secrets.compare_digest(supplied.encode(), DEMO_PASSWORD.encode()):
+    if DEMO_KEY is not None:
+        if _matches(request.query_params.get('key'), DEMO_KEY):
+            response = await call_next(request)
+            response.set_cookie(KEY_COOKIE, DEMO_KEY, httponly=True, samesite='lax', max_age=12 * 3600)
+            return response
+        if _matches(request.cookies.get(KEY_COOKIE), DEMO_KEY):
             return await call_next(request)
-    return Response('Password required', status_code=401, headers={'WWW-Authenticate': 'Basic realm="FraudShield"'})
+    if DEMO_PASSWORD is not None:
+        header = request.headers.get('authorization', '')
+        if header.startswith('Basic '):
+            try:
+                supplied = base64.b64decode(header[6:]).decode('utf-8').split(':', 1)[1]
+            except Exception:
+                supplied = ''
+            if _matches(supplied, DEMO_PASSWORD):
+                return await call_next(request)
+        return Response('Password required', status_code=401, headers={'WWW-Authenticate': 'Basic realm="FraudShield"'})
+    return HTMLResponse(LOCKED_PAGE, status_code=401)
+
+
+@app.get('/health')
+def health():
+    return {'ok': True}
 
 app.mount('/static', StaticFiles(directory=ROOT / 'Final_Demo/static'), name='static')
 MODEL_NAMES = {'baseline': 'Random Forest (comparison)', 'boosting': 'Gradient Boosting, transaction-only (comparison)',

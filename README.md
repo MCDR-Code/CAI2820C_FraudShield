@@ -71,10 +71,9 @@ python -m pip install -r requirements-tested.txt
 
 Double-click [START_DEMO_LOCAL.bat](Final_Demo/START_DEMO_LOCAL.bat) for
 http://127.0.0.1:8766. For the presentation, use
-[START_DEMO_REMOTE.bat](Final_Demo/START_DEMO_REMOTE.bat) and the existing
-external 5100 -> internal 5001 forwarding. Planned address:
-http://b2518067.eero.online:5100. Stop the TTS/STT demo before sharing that port.
-The launcher does not enable forwarding or change the firewall.
+[START_DEMO_REMOTE.bat](Final_Demo/START_DEMO_REMOTE.bat): like the TTS/STT phone
+app, it starts the demo, opens a Cloudflare quick tunnel, prints a link with a new
+access key, copies it and shows a QR code. No router forwarding is needed.
 [Full launch and preloading instructions](Final_Demo/README.md).
 
 Datasets and model binaries stay local; a Git clone alone cannot score transactions.

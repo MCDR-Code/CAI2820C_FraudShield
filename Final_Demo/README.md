@@ -17,18 +17,21 @@ python -m uvicorn app:app --app-dir Final_Demo --host 127.0.0.1 --port 8766
 
 ## Remote presentation
 
-1. Stop the TTS/STT demo; it shares internal port 5001.
-2. Double-click **START_DEMO_REMOTE.bat** and enter the session password.
-3. Keep the presentation computer awake and its terminal running. The launcher
-   does not change Windows Firewall or router rules.
-4. Enable the existing external TCP 5100 to presentation-computer TCP 5001 mapping.
-5. Open http://b2518067.eero.online:5100 on the presentation device. Use any username
-   and the session password. Test from another network before presentation day.
-6. Disable forwarding and stop the server afterward. Forwarding is normally off.
+Same approach as the TTS/STT phone app (Start-Phone.ps1):
 
-In remote mode, host-computer access is http://127.0.0.1:5001. This temporary HTTP
-demo does not provide HTTPS; use synthetic data and a separate session password.
-The README does not claim external reachability has already been tested.
+1. One-time setup: cloudflared at `G:\Tools\cloudflared.exe` (already used by the
+   TTS/STT project) and, for the QR code, `python -m pip install "qrcode[pil]"`.
+2. Double-click **START_DEMO_REMOTE.bat** (it runs `Start-Demo-Remote.ps1`). It starts
+   the demo server on this computer (port 5001, local only) in its own window, then a
+   Cloudflare quick tunnel.
+3. It prints a link like `https://some-words.trycloudflare.com/?key=...`, copies it to
+   the clipboard and opens a QR code. Open it on the presentation computer; the key is
+   then remembered by that browser, so no password is typed.
+4. Keep this computer awake and the launcher window open while presenting.
+5. Press Enter in the launcher afterward: the tunnel closes and the demo server stops.
+   The address and key change every start, so an old link never works again.
+
+Options: `-Cloudflared <path>`, `-NoTunnel` (key-protected server only, for testing).
 
 ## Present while the data processes
 

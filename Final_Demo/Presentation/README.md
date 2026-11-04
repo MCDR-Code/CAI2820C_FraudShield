@@ -8,9 +8,8 @@ member must confirm their own contributions and learning before report submissio
 
 ## Before presenting
 
-1. Stop the TTS/STT service on port 5001. Start ../START_DEMO_REMOTE.bat and enter
-   the session password. Enable the existing 5100 -> 5001 forwarding and verify
-   http://b2518067.eero.online:5100 from the presentation device.
+1. Start ../START_DEMO_REMOTE.bat. Open the link it prints (or scan its QR code) on
+   the presentation device; the link carries the access key and changes every start.
 2. In the same browser tab, load corrected server history 2021-2025. Wait for the
    file list, then start corrected 2026 review. Switch to the PowerPoint while
    scoring continues; leave the tab open without refreshing.
@@ -19,7 +18,7 @@ member must confirm their own contributions and learning before report submissio
    is already trained and scores are not calibrated probabilities.
 4. If processing is not finished, use slide 9 or the executed evaluation notebook
    as explicitly recorded evidence; do not describe it as a new live result.
-5. Disable forwarding and stop the server after presenting.
+5. Press Enter in the launcher after presenting: the tunnel closes and the server stops.
 
 ## Content checks
 

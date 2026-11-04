@@ -17,7 +17,7 @@ See [current guide](Part_III_Modeling_Demo/README.md),
 [submission forms](Docs_README.md). Code, notebooks and aggregate evidence
 are published; datasets and model binaries remain local. Missing personal
 reflections are identified in the forms. The planned remote demo is
-http://b2518067.eero.online:5100; its forwarding is off outside presentations.
+`http://<server-address>:5100`; its forwarding is off outside presentations.
 
 ## Project phases
 

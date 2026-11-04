@@ -107,7 +107,7 @@ an existing record. Read saved results rather than repeatedly tuning against tes
 not train. `run_notebook.py` preserves executed notebooks by refusing overwrites.
 
 For deliberate remote presentation, `START_DEMO_REMOTE.bat` listens on port 5001
-and requests an HTTP Basic password. The planned address is http://b2518067.eero.online:5100, with external TCP 5100
+and requests an HTTP Basic password. The planned address is `http://<server-address>:5100`, with external TCP 5100
 forwarded to internal TCP 5001 on the presentation computer. Forwarding is currently
 off and must be enabled and tested by the presenter. The TTS/STT demo shares this
 mapping, so stop that app before starting FraudShield; only one app can use port
