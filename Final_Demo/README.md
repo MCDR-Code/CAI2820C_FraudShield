@@ -52,9 +52,23 @@ rows are filled in the project forms.
 
 ## Team setup on another computer
 
-Clone the repository and check out phase-iii-history-context. Download the team's
-separately shared local demo files and place these folders under the repository
-root, preserving their names:
+Clone the repository and check out phase-iii-history-context:
+
+```powershell
+git clone --branch phase-iii-history-context https://github.com/MCDR-Code/CAI2820C_FraudShield.git
+cd .\CAI2820C_FraudShield
+```
+
+If you already cloned it, switch to that branch and pull its latest changes.
+Download FraudShield_Demo_Files.zip from the team's shared location. Extract its
+contents into this repository root. Models and Data must be beside Final_Demo
+and Shared, not inside another FraudShield_Demo_Files folder. The ZIP also
+contains START_HERE.txt and PACKAGE_INVENTORY.json.
+
+If you have the corrected synthetic CSVs separately, place transactions_2021.csv
+under Data/synthetic_2021_fixed and transactions_2022.csv through
+transactions_2026.csv under Data/synthetic_2022_2026_fixed. Also obtain the three
+saved-model folders; synthetic files alone cannot run the demo. Preserve this layout:
 
 ```text
 CAI2820C_FraudShield/
@@ -86,3 +100,17 @@ Final_Demo/START_DEMO_LOCAL.bat. No retraining is needed. Install dependencies o
 each computer; do not copy sparkov_env. Only load saved model binaries supplied
 by the trusted team. See ../References/Data_and_Models.md for the full local data
 inventory, including files needed for rebuilding the experiment.
+
+From PowerShell in the repository root:
+
+```powershell
+python -m pip install -r requirements-tested.txt
+.\Final_Demo\START_DEMO_LOCAL.bat
+```
+
+Open http://127.0.0.1:8766/. In Customer history, click Load server history
+2021-2025 and wait for the five-file list, then click Score server 2026 file.
+Keep the tab open without refreshing. This scores the saved model; it does not
+train or change its threshold. For a quick check without the full yearly data,
+use Load example history followed by Load example transactions. The Model
+evaluation tab shows the saved experiment evidence.

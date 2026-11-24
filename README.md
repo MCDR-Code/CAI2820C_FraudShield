@@ -77,6 +77,14 @@ access key, copies it and shows a QR code. No router forwarding is needed.
 [Full launch and preloading instructions](Final_Demo/README.md).
 
 Datasets and model binaries stay local; a Git clone alone cannot score transactions.
+For a teammate's local demo, obtain FraudShield_Demo_Files.zip from the team and
+extract its Models and Data folders into this repository root, beside Final_Demo
+and Shared. If you already have the corrected synthetic files, place the 2021
+CSV in Data/synthetic_2021_fixed and the 2022-2026 CSVs in
+Data/synthetic_2022_2026_fixed; also obtain Models/expanded_fixed_run1 with its
+three model folders. No retraining is needed. The
+[team setup guide](Final_Demo/README.md#team-setup-on-another-computer) gives the
+exact file layout, installation commands and scoring steps.
 See [Part III reconstruction](Part_III/README.md) for the trusted customer-file
 handoff and clean-workspace pipeline. Saved aggregate evidence remains readable
 without training or evaluation. The [project forms](Part_III/Deliverables/) include
