@@ -64,7 +64,7 @@ current manifests record relocated source paths and verified example parity.
 
 Read ../Final_Demo/README.md for local/remote launchers and preloading history before
 the presentation. The corrected server history is 2021-2025; review is corrected 2026.
-All data are synthetic; no real-bank performance is claimed. Personal reflections
-still require the team. Monitoring, outcome recording and scheduled retraining are
+All data are synthetic; no real-bank performance is claimed. Team reflections
+are filled in the project forms. Monitoring, outcome recording and scheduled retraining are
 proposed operations. The exploratory look-back rule measures delayed recovery,
 not the frozen model's immediate detection rate.

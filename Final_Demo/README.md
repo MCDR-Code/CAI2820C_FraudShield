@@ -47,5 +47,42 @@ reuses the uploaded file. Customer history uses the history model. Model evaluat
 shows recorded validation/test evidence, without training or threshold selection.
 Download scored results to preserve them beyond the page session.
 
-The presentation deck and rehearsal notes are in Presentation. Missing personal
-reflections in the report still require team input.
+The presentation deck and rehearsal notes are in Presentation. Team reflection
+rows are filled in the project forms.
+
+## Team setup on another computer
+
+Clone the repository and check out phase-iii-history-context. Download the team's
+separately shared local demo files and place these folders under the repository
+root, preserving their names:
+
+```text
+CAI2820C_FraudShield/
+  Models/
+    expanded_fixed_run1/
+      history_v3/             (copy the whole folder)
+      rf_baseline/            (copy the whole folder)
+      transaction_models/     (copy the whole folder)
+  Data/
+    synthetic_2021_fixed/
+      transactions_2021.csv
+    synthetic_2022_2026_fixed/
+      transactions_2022.csv
+      transactions_2023.csv
+      transactions_2024.csv
+      transactions_2025.csv
+      transactions_2026.csv
+```
+
+The three model folders include saved examples, metadata, evaluation records and
+charts, as well as the saved model binaries. Keep all their files so both the
+sample buttons and Model evaluation tab work. Together these folders and six
+yearly CSVs occupy about 1.6 GB before compression. Original Kaggle files, the
+expanded training copy, the alternate December demo split and the generator's
+environment are not needed for the standard demo.
+
+Use Python 3.12 and install requirements-tested.txt as described above, then run
+Final_Demo/START_DEMO_LOCAL.bat. No retraining is needed. Install dependencies on
+each computer; do not copy sparkov_env. Only load saved model binaries supplied
+by the trusted team. See ../References/Data_and_Models.md for the full local data
+inventory, including files needed for rebuilding the experiment.

@@ -79,8 +79,8 @@ access key, copies it and shows a QR code. No router forwarding is needed.
 Datasets and model binaries stay local; a Git clone alone cannot score transactions.
 See [Part III reconstruction](Part_III/README.md) for the trusted customer-file
 handoff and clean-workspace pipeline. Saved aggregate evidence remains readable
-without training or evaluation. The [final forms](Part_III/Deliverables/) still
-mark missing personal team reflections. Proposed monitoring and post-test
+without training or evaluation. The [project forms](Part_III/Deliverables/) include
+the completed team reflection rows. Proposed monitoring and post-test
 look-back recovery are not implemented real-time detection capabilities.
 
 ## Reorganization verification

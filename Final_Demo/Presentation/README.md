@@ -1,10 +1,9 @@
 # Final presentation and rehearsal
 
-FraudShield_Final_Presentation.pptx contains 15 editable slides: 13 main slides and
-two appendix slides. Speaker notes include suggested pacing, explanations and
-repository source references. Aim for about eight minutes of speaking and two
-minutes of live demonstration, then questions. Rehearse with the whole team; each
-member must confirm their own contributions and learning before report submission.
+FraudShield_Final_Presentation_15min.pptx is the current 14-slide presentation.
+Speaker notes include scripts, pacing, handoffs, demo steps and Q&A preparation.
+Plan for about 15 minutes, including the five-minute demonstration, then questions.
+Rehearse with the whole team and review the speaker assignments in the notes.
 
 ## Before presenting
 
@@ -13,10 +12,10 @@ member must confirm their own contributions and learning before report submissio
 2. In the same browser tab, load corrected server history 2021-2025. Wait for the
    file list, then start corrected 2026 review. Switch to the PowerPoint while
    scoring continues; leave the tab open without refreshing.
-3. Slide 11 is the live-demo cue. Return to that browser tab. Show the loaded
+3. Slide 12 is the live-demo cue. Return to that browser tab. Show the loaded
    history, review metrics, analyst queue and download. Explain that the model
    is already trained and scores are not calibrated probabilities.
-4. If processing is not finished, use slide 9 or the executed evaluation notebook
+4. If processing is not finished, use slide 10 or the executed evaluation notebook
    as explicitly recorded evidence; do not describe it as a new live result.
 5. Press Enter in the launcher after presenting: the tunnel closes and the server stops.
 
@@ -28,5 +27,6 @@ Use only corrected results: 956,022 test rows and 2,032 fraud cases. History mod
 earlier-test investigation; disclose that development history. The look-back
 experiment is delayed recovery, not immediate model recall.
 
-The appendix contains the folder map and launch checklist. No personal reflections
-were invented for teammates. All comparison tables and diagrams remain editable.
+The project README contains the folder map; Final_Demo/README.md contains the
+launch instructions. The presentation's final slide includes Q&A preparation in
+its speaker notes.
